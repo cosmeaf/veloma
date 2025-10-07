@@ -1,0 +1,2 @@
+Olá {{ name }}!
+Bem-vindo(a) à plataforma.

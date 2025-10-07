@@ -1,0 +1,26 @@
+[
+  {
+    "model": "services.servicetoggle",
+    "pk": 1,
+    "fields": { "key": "email", "enabled": true, "notes": "toggle inicial do serviço de email" }
+  },
+  {
+    "model": "services.emailprovider",
+    "pk": 1,
+    "fields": {
+      "name": "Console Backend",
+      "code": "default",
+      "provider": "console",
+      "is_default": true,
+      "host": "",
+      "port": 587,
+      "username": "",
+      "password": "",
+      "use_tls": true,
+      "use_ssl": false,
+      "timeout": 30,
+      "file_path": "",
+      "from_email_default": "no-reply@example.com"
+    }
+  }
+]

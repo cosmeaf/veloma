@@ -1,0 +1,55 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: ["redis-server","--appendonly","yes","--save","60","1000"]
+    ports: ["6379:6379"]
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD","redis-cli","ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    networks: [app_net]
+
+  flower:
+    image: mher/flower:latest
+    container_name: flower
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - FLOWER_PORT=5555              # porta interna
+    ports:
+      - "127.0.0.1:5555:5555"         # fixa externa -> interna
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [app_net]
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: docker/celery.Dockerfile
+    container_name: celery_worker
+    command: bash -lc "celery -A core worker --loglevel=info"
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./:/app:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [app_net]
+
+volumes:
+  redis-data:
+
+networks:
+  app_net:
+    driver: bridge

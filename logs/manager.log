@@ -1,0 +1,196 @@
+[2025-09-19 16:27:13] Parando aplicação...
+[2025-09-19 16:27:13] Django já está parado
+[2025-09-19 16:27:15] Aplicação parada e ambiente limpo.
+[2025-09-19 16:27:18] Iniciando aplicação...
+[2025-09-19 16:27:18] Carregando variáveis de /c/Users/cosme.alves/OneDrive - Claranet/Desktop/projects/veloma_crm/.env...
+[2025-09-19 16:27:18] Exportada: DJANGO_SETTINGS_MODULE=core.settings
+[2025-09-19 16:27:18] Exportada: SECRET_KEY=odd-nu6qu*2j+^d9b%wx_*ybxicq6-obu96)(2b%0&_(59%#gd
+[2025-09-19 16:27:18] Exportada: DEBUG=True
+[2025-09-19 16:27:18] Exportada: ALLOWED_HOSTS=*
+[2025-09-19 16:27:19] Exportada: CELERY_BROKER_URL=redis://127.0.0.1:6379/1
+[2025-09-19 16:27:19] Exportada: CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/2
+[2025-09-19 16:27:19] Exportada: STATIC_ROOT=C:/Users/cosme.alves/OneDrive - Claranet/Desktop/projects/veloma_crm/staticfiles
+[2025-09-19 16:27:19] Exportada: USE_DOCKER_CELERY=1
+[2025-09-19 16:27:20] Exportada: AUTO_BUILD=1
+[2025-09-19 16:27:20] Ativando ambiente virtual em /c/Users/cosme.alves/OneDrive - Claranet/Desktop/projects/veloma_crm/venv...
+[2025-09-19 16:27:20] Ambiente virtual ativado. Python: /c/Users/cosme.alves/OneDrive - Claranet/Desktop/projects/veloma_crm/venv/Scripts/python.exe (Python 3.13.3)
+[2025-09-19 16:27:21] Django encontrado: versão 5.2.6
+[2025-09-19 16:27:21] Verificando dependências...
+[2025-09-19 16:27:22] pip encontrado: pip 25.2 from C:\Users[2025-09-19 16:27:22] Django: 5.2.6 | Celery(docker): enabled
+[2025-09-19 16:27:23] Verificando Docker...
+[2025-09-19 16:27:24] Docker verificado com sucesso
+[2025-09-19 16:27:24] Verificando containers Redis/Flower/Celery...
+[2025-09-19 16:27:24] Containers detectados: redis|flower|celery_worker
+[2025-09-19 16:27:24] Verificando porta 7000...
+[2025-09-19 16:27:25] Porta 7000 está livre
+[2025-09-19 16:27:25] Executando collectstatic...
+
+0 static files copied to 'C:\Users\cosme.alves\OneDrive - Claranet\Desktop\projects\veloma_crm\staticfiles', 197 unmodified.
+[2025-09-19 16:27:28] collectstatic OK → C:/Users/cosme.alves/OneDrive - Claranet/Desktop/projects/veloma_crm/staticfiles
+nohup: ignoring input
+Watching for file changes with StatReloader
+[19/Sep/2025 16:27:32] "GET /api/auth/trigger/ HTTP/1.1" 200 72
+[19/Sep/2025 16:27:42] "GET /api/auth/trigger/ HTTP/1.1" 200 72
+[19/Sep/2025 16:27:45] "GET /api/auth/trigger/ HTTP/1.1" 200 72
+[19/Sep/2025 16:27:47] "GET /api/auth/trigger/ HTTP/1.1" 200 72
+[19/Sep/2025 16:27:47] "GET /api/auth/trigger/ HTTP/1.1" 200 72
+[19/Sep/2025 16:27:50] "GET /api/auth/trigger/ HTTP/1.1" 200 72
+[19/Sep/2025 16:27:53] "GET /api/auth/trigger/ HTTP/1.1" 200 72
+[19/Sep/2025 16:28:18] "GET /api/auth/trigger/ HTTP/1.1" 200 72
+[19/Sep/2025 16:28:20] "GET /api/auth/trigger/ HTTP/1.1" 200 72
+[19/Sep/2025 16:28:21] "GET /api/auth/trigger/ HTTP/1.1" 200 72
+[19/Sep/2025 16:28:22] "GET /api/auth/trigger/ HTTP/1.1" 200 72
+[19/Sep/2025 16:32:19] "GET /api/auth/trigger/ HTTP/1.1" 200 72
+Method Not Allowed: /api/auth/login/
+[19/Sep/2025 16:32:25] "GET /api/auth/login/ HTTP/1.1" 405 7718
+[19/Sep/2025 16:32:26] "GET /static/rest_framework/css/bootstrap.min.css HTTP/1.1" 200 121457
+[19/Sep/2025 16:32:26] "GET /static/rest_framework/css/bootstrap-tweaks.css HTTP/1.1" 200 3426
+[19/Sep/2025 16:32:26] "GET /static/rest_framework/css/prettify.css HTTP/1.1" 200 817
+[19/Sep/2025 16:32:26] "GET /static/rest_framework/css/default.css HTTP/1.1" 200 1152
+[19/Sep/2025 16:32:26] "GET /static/rest_framework/js/ajax-form.js HTTP/1.1" 200 3796
+[19/Sep/2025 16:32:26] "GET /static/rest_framework/js/csrf.js HTTP/1.1" 200 1793
+[19/Sep/2025 16:32:26] "GET /static/rest_framework/js/jquery-3.7.1.min.js HTTP/1.1" 200 87533
+[19/Sep/2025 16:32:26] "GET /static/rest_framework/js/prettify-min.js HTTP/1.1" 200 13632
+[19/Sep/2025 16:32:26] "GET /static/rest_framework/js/bootstrap.min.js HTTP/1.1" 200 39680
+[19/Sep/2025 16:32:26] "GET /static/rest_framework/img/grid.png HTTP/1.1" 200 1458
+[19/Sep/2025 16:32:26] "GET /static/rest_framework/js/load-ajax-form.js HTTP/1.1" 200 59
+[19/Sep/2025 16:32:26] "GET /static/rest_framework/js/default.js HTTP/1.1" 200 1268
+Method Not Allowed: /api/auth/login/
+[19/Sep/2025 16:45:15] "GET /api/auth/login/ HTTP/1.1" 405 7718
+[19/Sep/2025 16:45:15] "GET /static/rest_framework/css/bootstrap.min.css HTTP/1.1" 304 0
+[19/Sep/2025 16:45:15] "GET /static/rest_framework/css/bootstrap-tweaks.css HTTP/1.1" 304 0
+[19/Sep/2025 16:45:15] "GET /static/rest_framework/css/prettify.css HTTP/1.1" 304 0
+[19/Sep/2025 16:45:15] "GET /static/rest_framework/css/default.css HTTP/1.1" 304 0
+[19/Sep/2025 16:45:15] "GET /static/rest_framework/js/jquery-3.7.1.min.js HTTP/1.1" 304 0
+[19/Sep/2025 16:45:15] "GET /static/rest_framework/js/ajax-form.js HTTP/1.1" 304 0
+[19/Sep/2025 16:45:15] "GET /static/rest_framework/js/csrf.js HTTP/1.1" 304 0
+[19/Sep/2025 16:45:15] "GET /static/rest_framework/js/bootstrap.min.js HTTP/1.1" 304 0
+[19/Sep/2025 16:45:15] "GET /static/rest_framework/js/prettify-min.js HTTP/1.1" 304 0
+[19/Sep/2025 16:45:15] "GET /static/rest_framework/js/default.js HTTP/1.1" 304 0
+[19/Sep/2025 16:45:15] "GET /static/rest_framework/js/load-ajax-form.js HTTP/1.1" 304 0
+[19/Sep/2025 16:45:15] "GET /static/rest_framework/img/grid.png HTTP/1.1" 304 0
+Unauthorized: /api/auth/
+[19/Sep/2025 16:45:17] "GET /api/auth/ HTTP/1.1" 401 5044
+Performing system checks...
+
+System check identified no issues (0 silenced).
+September 19, 2025 - 16:27:32
+Django version 5.2.6, using settings 'core.settings'
+Starting development server at http://0.0.0.0:7000/
+Quit the server with CTRL-BREAK.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+[2025-09-19 17:15:46] Parando aplicação...
+[2025-09-19 17:15:46] Django já está parado
+[2025-09-19 17:15:49] Aplicação parada e ambiente limpo.
+[2025-09-19 17:15:51] Iniciando aplicação...
+[2025-09-19 17:15:51] Carregando variáveis de /c/Users/cosme.alves/OneDrive - Claranet/Desktop/projects/veloma_crm/.env...
+[2025-09-19 17:15:51] Exportada: DJANGO_SETTINGS_MODULE=core.settings
+[2025-09-19 17:15:51] Exportada: SECRET_KEY=odd-nu6qu*2j+^d9b%wx_*ybxicq6-obu96)(2b%0&_(59%#gd
+[2025-09-19 17:15:51] Exportada: DEBUG=True
+[2025-09-19 17:15:52] Exportada: ALLOWED_HOSTS=*
+[2025-09-19 17:15:52] Exportada: CELERY_BROKER_URL=redis://127.0.0.1:6379/1
+[2025-09-19 17:15:52] Exportada: CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/2
+[2025-09-19 17:15:52] Exportada: STATIC_ROOT=C:/Users/cosme.alves/OneDrive - Claranet/Desktop/projects/veloma_crm/staticfiles
+[2025-09-19 17:15:53] Exportada: USE_DOCKER_CELERY=1
+[2025-09-19 17:15:53] Exportada: AUTO_BUILD=1
+[2025-09-19 17:15:53] Ativando ambiente virtual em /c/Users/cosme.alves/OneDrive - Claranet/Desktop/projects/veloma_crm/venv...
+[2025-09-19 17:15:53] Ambiente virtual ativado. Python: /c/Users/cosme.alves/OneDrive - Claranet/Desktop/projects/veloma_crm/venv/Scripts/python.exe (Python 3.13.3)
+[2025-09-19 17:15:54] Django encontrado: versão 5.2.6
+[2025-09-19 17:15:54] Verificando dependências...
+[2025-09-19 17:15:56] pip encontrado: pip 25.2 from C:\Users[2025-09-19 17:15:56] Django: 5.2.6 | Celery(docker): enabled
+[2025-09-19 17:15:56] Verificando Docker...
+[2025-09-19 17:15:58] Docker verificado com sucesso
+[2025-09-19 17:15:58] Verificando containers Redis/Flower/Celery...
+[2025-09-19 17:15:58] Containers detectados: redis|flower|celery_worker
+[2025-09-19 17:15:59] Verificando porta 7000...
+[2025-09-19 17:15:59] Porta 7000 está livre
+[2025-09-19 17:15:59] Executando collectstatic...
+
+0 static files copied to 'C:\Users\cosme.alves\OneDrive - Claranet\Desktop\projects\veloma_crm\staticfiles', 197 unmodified.
+[2025-09-19 17:16:04] collectstatic OK → C:/Users/cosme.alves/OneDrive - Claranet/Desktop/projects/veloma_crm/staticfiles
+nohup: ignoring input
+Watching for file changes with StatReloader
+Method Not Allowed: /api/auth/login/
+[19/Sep/2025 17:16:16] "GET /api/auth/login/ HTTP/1.1" 405 7718
+[19/Sep/2025 17:16:16] "GET /static/rest_framework/css/bootstrap.min.css HTTP/1.1" 304 0
+[19/Sep/2025 17:16:16] "GET /static/rest_framework/css/bootstrap-tweaks.css HTTP/1.1" 304 0
+[19/Sep/2025 17:16:16] "GET /static/rest_framework/css/prettify.css HTTP/1.1" 304 0
+[19/Sep/2025 17:16:16] "GET /static/rest_framework/css/default.css HTTP/1.1" 304 0
+[19/Sep/2025 17:16:16] "GET /static/rest_framework/js/jquery-3.7.1.min.js HTTP/1.1" 304 0
+[19/Sep/2025 17:16:16] "GET /static/rest_framework/js/ajax-form.js HTTP/1.1" 304 0
+[19/Sep/2025 17:16:16] "GET /static/rest_framework/js/csrf.js HTTP/1.1" 304 0
+[19/Sep/2025 17:16:16] "GET /static/rest_framework/js/bootstrap.min.js HTTP/1.1" 304 0
+[19/Sep/2025 17:16:16] "GET /static/rest_framework/js/prettify-min.js HTTP/1.1" 304 0
+[19/Sep/2025 17:16:16] "GET /static/rest_framework/js/default.js HTTP/1.1" 304 0
+[19/Sep/2025 17:16:16] "GET /static/rest_framework/js/load-ajax-form.js HTTP/1.1" 304 0
+[19/Sep/2025 17:16:16] "GET /static/rest_framework/img/grid.png HTTP/1.1" 304 0
+[19/Sep/2025 17:18:34] "GET /admin HTTP/1.1" 301 0
+[19/Sep/2025 17:18:34] "GET /admin/ HTTP/1.1" 302 0
+[19/Sep/2025 17:18:34] "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4208
+[19/Sep/2025 17:18:35] "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2808
+[19/Sep/2025 17:18:35] "GET /static/admin/css/base.css HTTP/1.1" 200 22120
+[19/Sep/2025 17:18:35] "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+[19/Sep/2025 17:18:35] "GET /static/admin/css/login.css HTTP/1.1" 200 951
+[19/Sep/2025 17:18:35] "GET /static/admin/css/responsive.css HTTP/1.1" 200 16565
+[19/Sep/2025 17:18:35] "GET /static/admin/js/theme.js HTTP/1.1" 200 1653
+[19/Sep/2025 17:18:35] "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+[19/Sep/2025 17:18:42] "POST /admin/login/?next=/admin/ HTTP/1.1" 302 0
+[19/Sep/2025 17:18:42] "GET /admin/ HTTP/1.1" 200 11760
+[19/Sep/2025 17:18:42] "GET /static/admin/css/dashboard.css HTTP/1.1" 200 441
+[19/Sep/2025 17:18:42] "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 200 380
+[19/Sep/2025 17:18:42] "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+[19/Sep/2025 17:18:48] "GET /admin/services/servicetoggle/ HTTP/1.1" 200 14408
+[19/Sep/2025 17:18:48] "GET /static/admin/css/forms.css HTTP/1.1" 200 8525
+[19/Sep/2025 17:18:48] "GET /static/admin/css/changelists.css HTTP/1.1" 200 6878
+[19/Sep/2025 17:18:48] "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+[19/Sep/2025 17:18:48] "GET /static/admin/js/core.js HTTP/1.1" 200 6208
+[19/Sep/2025 17:18:48] "GET /static/admin/css/widgets.css HTTP/1.1" 200 11991
+[19/Sep/2025 17:18:48] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:18:48] "GET /static/admin/js/actions.js HTTP/1.1" 200 8076
+[19/Sep/2025 17:18:48] "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 9777
+[19/Sep/2025 17:18:48] "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+[19/Sep/2025 17:18:48] "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+[19/Sep/2025 17:18:48] "GET /static/admin/img/search.svg HTTP/1.1" 200 458
+[19/Sep/2025 17:18:48] "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 285314
+[19/Sep/2025 17:18:48] "GET /static/admin/js/filters.js HTTP/1.1" 200 978
+[19/Sep/2025 17:18:48] "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 325171
+[19/Sep/2025 17:18:48] "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 200 331
+[19/Sep/2025 17:18:51] "GET /admin/services/servicetoggle/1/change/ HTTP/1.1" 200 14076
+[19/Sep/2025 17:18:51] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:18:51] "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 200 586
+[19/Sep/2025 17:18:51] "GET /static/admin/js/change_form.js HTTP/1.1" 200 606
+[19/Sep/2025 17:18:58] "GET /admin/services/emailprovider/ HTTP/1.1" 200 15912
+[19/Sep/2025 17:18:58] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:18:58] "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 200 581
+[19/Sep/2025 17:19:09] "GET /admin/django_celery_results/taskresult/ HTTP/1.1" 200 14228
+[19/Sep/2025 17:19:09] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:19:10] "GET /admin/django_celery_results/groupresult/ HTTP/1.1" 200 13501
+[19/Sep/2025 17:19:10] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:19:11] "GET /admin/django_celery_results/groupresult/ HTTP/1.1" 200 13501
+[19/Sep/2025 17:19:11] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:19:13] "GET /admin/django_celery_results/groupresult/ HTTP/1.1" 200 13501
+[19/Sep/2025 17:19:13] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:19:15] "GET /admin/django_celery_results/taskresult/ HTTP/1.1" 200 14228
+[19/Sep/2025 17:19:15] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:19:16] "GET /admin/auth/user/ HTTP/1.1" 200 16429
+[19/Sep/2025 17:19:16] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:19:16] "GET /static/admin/img/icon-no.svg HTTP/1.1" 200 560
+[19/Sep/2025 17:19:16] "GET /static/admin/img/icon-yes.svg HTTP/1.1" 200 436
+[19/Sep/2025 17:19:16] "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 200 1097
+[19/Sep/2025 17:19:19] "GET /admin/token_blacklist/blacklistedtoken/ HTTP/1.1" 200 12291
+[19/Sep/2025 17:19:19] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:19:20] "GET /admin/token_blacklist/outstandingtoken/ HTTP/1.1" 200 14370
+[19/Sep/2025 17:19:22] "GET /admin/services/servicetoggle/ HTTP/1.1" 200 14408
+[19/Sep/2025 17:19:22] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:19:24] "GET /admin/services/servicetoggle/1/change/ HTTP/1.1" 200 14076
+[19/Sep/2025 17:19:24] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:19:28] "GET /admin/services/emailprovider/ HTTP/1.1" 200 15912
+[19/Sep/2025 17:19:28] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:19:44] "GET /admin/services/emailprovider/1/change/ HTTP/1.1" 200 20313
+[19/Sep/2025 17:19:44] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[19/Sep/2025 17:20:08] "GET /admin/services/emailprovider/ HTTP/1.1" 200 15912
+[19/Sep/2025 17:20:08] "GET /admin/jsi18n/ HTTP/1.1" 200 7210
+[2025-09-19 17:22:18] Parando aplicação...
+[2025-09-19 17:22:22] Aplicação parada e ambiente limpo.

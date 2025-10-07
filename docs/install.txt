@@ -1,0 +1,17 @@
+cd C:\Users\cosme.alves\OneDrive - Claranet\Desktop\projects\veloma_crm
+code . 
+python -m venv venv
+.\venv\Scripts\activate.bat ou surce /venv/bin/activate
+
+python.exe -m pip install --upgrade pip
+pip install django djangorestframework djangorestframework-simplejwt
+pip freeze > requirements.txt
+
+django-admin startproject core . 
+python manage.py startapp authentication
+python manage.py startapp services 
+
+# UserRegisterSerializer, UserLoginSerializer
+# UserRegisterViewm UserLoginView
+
+# No projeto core iremos usar e receber todas as urls e urls de Model View Set 
