@@ -11,6 +11,7 @@ from .models import (
     ProtocolComment,
     ProtocolEvent,
     ProtocolRequirement,
+    ProtocolSubject,
 )
 
 # Fields the backend always sets itself; never accepted from the request.
@@ -125,6 +126,7 @@ class InvitationAcceptSerializer(serializers.Serializer):
 
 class ProtocolListSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='client.legal_name', read_only=True)
+    subject_name = serializers.CharField(source='subject.name', read_only=True)
     display_status = serializers.SerializerMethodField()
 
     class Meta:
@@ -132,6 +134,7 @@ class ProtocolListSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'number', 'client', 'client_name', 'title', 'category', 'priority',
             'status', 'display_status', 'due_date', 'assigned_to', 'created_at',
+            'subject', 'subject_name', 'sla_hours', 'response_due_at',
         )
         read_only_fields = fields
 
@@ -162,6 +165,22 @@ class ProtocolCreateSerializer(serializers.ModelSerializer):
             'client', 'title', 'description', 'category', 'priority',
             'competence_month', 'competence_year', 'due_date', 'assigned_to',
         )
+
+
+class ProtocolSubjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProtocolSubject
+        fields = ('id', 'name', 'description', 'sla_hours')
+        read_only_fields = fields
+
+
+class OpenRequestSerializer(serializers.Serializer):
+    """A client opens a request by choosing a subject; the SLA is derived from it."""
+
+    subject = serializers.UUIDField()
+    client = serializers.UUIDField(required=False)
+    title = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    description = serializers.CharField(required=False, allow_blank=True)
 
 
 class ProtocolUpdateSerializer(serializers.ModelSerializer):

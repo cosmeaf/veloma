@@ -448,6 +448,16 @@ class Protocol(models.Model):
     category = models.CharField(max_length=32, choices=CATEGORY_CHOICES, default='other', db_index=True)
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default=PRIORITY_NORMAL)
     status = models.CharField(max_length=24, choices=STATUS_CHOICES, default=STATUS_DRAFT, db_index=True)
+    # Subject chosen by the client when opening a request; drives the SLA.
+    subject = models.ForeignKey(
+        'ProtocolSubject',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='protocols',
+    )
+    sla_hours = models.PositiveIntegerField(blank=True, null=True)
+    response_due_at = models.DateTimeField(blank=True, null=True, db_index=True)
     competence_month = models.PositiveSmallIntegerField(blank=True, null=True)
     competence_year = models.PositiveSmallIntegerField(blank=True, null=True)
     due_date = models.DateField(blank=True, null=True, db_index=True)
@@ -911,3 +921,32 @@ class TermsAcceptance(models.Model):
 
     def __str__(self):
         return f'{self.email_snapshot} · {self.accepted_at:%Y-%m-%d}'
+
+
+class ProtocolSubject(models.Model):
+    """Catalogue of request subjects a client can pick when opening a protocol.
+
+    Each subject carries a response SLA (in hours): opening a request stamps the
+    protocol with the deadline, and the client is told when to expect an answer.
+    Managed in the Admin; deactivated rather than deleted so history survives.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=120, unique=True)
+    description = models.TextField(blank=True, help_text='Shown to the client when choosing the subject.')
+    # Optional mapping to the internal protocol category (for staff filtering).
+    category = models.CharField(max_length=32, blank=True)
+    sla_hours = models.PositiveIntegerField(default=48, help_text='Hours the office has to respond.')
+    active = models.BooleanField(default=True, db_index=True)
+    order = models.PositiveSmallIntegerField(default=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'client_portal_protocol_subject'
+        ordering = ('order', 'name')
+        verbose_name = 'Protocol subject'
+        verbose_name_plural = 'Protocol subjects'
+
+    def __str__(self):
+        return f'{self.name} (SLA {self.sla_hours}h)'

@@ -326,6 +326,25 @@ class ClientAccessTests(ClientPortalTestCase):
 
 
 class ProtocolTests(ClientPortalTestCase):
+    def test_open_request_opens_protocol_with_sla(self):
+        from datetime import timedelta
+
+        from .models import ProtocolSubject
+
+        subject = ProtocolSubject.objects.create(name='Teste SLA', category='tax', sla_hours=48)
+        before = timezone.now()
+        protocol = ProtocolService.open_request(
+            client=self.client_record, subject=subject, created_by=self.manager,
+        )
+        self.assertTrue(protocol.number.startswith(f'VEL-{timezone.now().year}-'))
+        self.assertEqual(protocol.subject_id, subject.id)
+        self.assertEqual(protocol.sla_hours, 48)
+        self.assertEqual(protocol.status, Protocol.STATUS_WAITING_DOCUMENTS)
+        self.assertEqual(protocol.title, 'Teste SLA')
+        # Response deadline is now + SLA hours.
+        self.assertGreaterEqual(protocol.response_due_at, before + timedelta(hours=47, minutes=59))
+        self.assertLessEqual(protocol.response_due_at, timezone.now() + timedelta(hours=48))
+
     def test_protocol_number_is_sequential_and_public(self):
         first = self._protocol()
         second = self._protocol()

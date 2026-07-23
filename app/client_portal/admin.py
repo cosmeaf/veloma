@@ -15,6 +15,7 @@ from .models import (
     ProtocolComment,
     ProtocolEvent,
     ProtocolRequirement,
+    ProtocolSubject,
     TermsAcceptance,
 )
 from .services import ClientLifecycleService, DocumentService
@@ -246,6 +247,25 @@ class ClientFolderAdmin(ModelAdmin):
     list_filter = ('folder_type', 'client', 'year')
     search_fields = ('name', 'client__legal_name')
     readonly_fields = ('id', 'slug', 'created_by', 'archived_at', 'created_at', 'updated_at')
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        actions.pop('delete_selected', None)
+        return actions
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@register(ProtocolSubject, site=veloma_admin_site)
+class ProtocolSubjectAdmin(ModelAdmin):
+    """Catalogue of request subjects and their response SLA. Deactivate, never delete."""
+
+    list_display = ('name', 'sla_hours', 'category', 'active', 'order')
+    list_filter = ('active', 'category')
+    list_editable = ('sla_hours', 'active', 'order')
+    search_fields = ('name', 'description')
+    readonly_fields = ('id', 'created_at', 'updated_at')
 
     def get_actions(self, request):
         actions = super().get_actions(request)

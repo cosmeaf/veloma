@@ -1,0 +1,19 @@
+Veloma
+
+Pedido recebido
+
+Olá{% if user.first_name %} {{ user.first_name }}{% endif %},
+
+Recebemos o seu pedido. A nossa equipa vai responder dentro do prazo indicado.
+
+{% if client.legal_name %}Empresa: {{ client.legal_name }}{% endif %}
+{% if protocol.number %}Protocolo: {{ protocol.number }}{% endif %}
+{% if subject %}Assunto: {{ subject }}{% endif %}
+{% if sla_hours %}Prazo de resposta: até {{ sla_hours }} horas{% endif %}
+{% if response_due_at %}Respondemos até: {{ response_due_at }}{% endif %}
+{% if event_time %}Data: {{ event_time }}{% endif %}
+
+Pode agora enviar os documentos deste pedido na sua área de cliente.
+{% if action_url %}Continuar: {{ action_url }}{% endif %}
+
+Se não reconhece esta ação, contacte imediatamente a administração.

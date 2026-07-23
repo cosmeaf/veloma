@@ -55,6 +55,7 @@ TEMPLATES = {
     'client_account_archived': ('Conta encerrada', 'emails/client_account_archived.html', 'emails/client_account_archived.txt'),
     'client_account_restored': ('Acesso reativado', 'emails/client_account_restored.html', 'emails/client_account_restored.txt'),
     'protocol_created': ('Novo protocolo {{ protocol.number }}', 'emails/protocol_created.html', 'emails/protocol_created.txt'),
+    'protocol_request_received': ('Pedido recebido — protocolo {{ protocol.number }}', 'emails/protocol_request_received.html', 'emails/protocol_request_received.txt'),
     'protocol_status_changed': ('Protocolo {{ protocol.number }} atualizado', 'emails/protocol_status_changed.html', 'emails/protocol_status_changed.txt'),
     'documents_requested': ('Documentos solicitados no protocolo {{ protocol.number }}', 'emails/documents_requested.html', 'emails/documents_requested.txt'),
     'document_uploaded': ('Documento recebido', 'emails/document_uploaded.html', 'emails/document_uploaded.txt'),
@@ -66,6 +67,17 @@ TEMPLATES = {
     'protocol_completed': ('Protocolo {{ protocol.number }} concluído', 'emails/protocol_completed.html', 'emails/protocol_completed.txt'),
     'protocol_reopened': ('Protocolo {{ protocol.number }} reaberto', 'emails/protocol_reopened.html', 'emails/protocol_reopened.txt'),
 }
+
+# Default request subjects seeded on a fresh install: (name, category, sla_hours, description).
+SUBJECTS = [
+    ('Envio de documentos', 'monthly_accounting', 24, 'Enviar documentos para a contabilidade.'),
+    ('Dúvida fiscal', 'tax', 48, 'Questões sobre impostos e obrigações fiscais.'),
+    ('IVA', 'vat', 48, 'Assuntos relacionados com o IVA.'),
+    ('Processamento salarial', 'payroll', 72, 'Recibos de vencimento, salários e contribuições.'),
+    ('Recursos humanos', 'hr', 72, 'Admissões, contratos e gestão de pessoal.'),
+    ('Abertura de empresa', 'company_opening', 120, 'Constituição de uma nova empresa.'),
+    ('Outro assunto', 'other', 48, 'Outro pedido não listado.'),
+]
 
 
 class Command(BaseCommand):
@@ -110,6 +122,16 @@ class Command(BaseCommand):
                     'delivery_mode': EmailTemplate.MODE_AUTO,
                 },
             )
+
+        # Default request subjects with their SLA (only on a fresh install, so an
+        # office that has tuned its catalogue is never overwritten on redeploy).
+        from app.client_portal.models import ProtocolSubject
+
+        if not ProtocolSubject.objects.exists():
+            for order, (name, category, sla, desc) in enumerate(SUBJECTS, start=1):
+                ProtocolSubject.objects.create(
+                    name=name, category=category, sla_hours=sla, description=desc, order=order * 10,
+                )
 
         username = os.getenv('DJANGO_SUPERUSER_USERNAME', '').strip().lower()
         email = os.getenv('DJANGO_SUPERUSER_EMAIL', username).strip().lower()

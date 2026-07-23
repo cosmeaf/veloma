@@ -850,6 +850,62 @@ class ProtocolService:
         cls._notify_members(protocol, purpose='protocol_created')
         return protocol
 
+    @classmethod
+    @transaction.atomic
+    def open_request(cls, *, client, subject, title='', description='', created_by=None, request=None):
+        """Client self-service: opens a protocol for a chosen subject with its SLA.
+
+        Stamps the response deadline (now + subject SLA), leaves the protocol
+        waiting for documents, and confirms to the client when to expect an
+        answer.
+        """
+        if not client.is_active:
+            raise ValueError('Só é possível abrir pedidos para clientes ativos.')
+        if not subject.active:
+            raise ValueError('Este assunto não está disponível.')
+
+        now = timezone.now()
+        sla_hours = subject.sla_hours
+        response_due_at = now + timedelta(hours=sla_hours)
+        protocol = Protocol(
+            client=client,
+            created_by=created_by,
+            number=cls._next_number(now.year),
+            subject=subject,
+            title=(title.strip() or subject.name)[:255],
+            description=(description or '').strip(),
+            category=subject.category or 'other',
+            status=Protocol.STATUS_WAITING_DOCUMENTS,
+            sla_hours=sla_hours,
+            response_due_at=response_due_at,
+            due_date=response_due_at.date(),
+            started_at=now,
+        )
+        protocol.full_clean(exclude=('number',))
+        protocol.save()
+        ProtocolEventService.record(
+            protocol=protocol,
+            event_type='protocol_created',
+            actor=created_by,
+            new_value=protocol.status,
+            request=request,
+        )
+        PortalAudit.record(
+            event_type='protocol_request_opened',
+            actor=created_by,
+            client=client,
+            target=protocol.number,
+            summary=protocol.title,
+            metadata={'subject': subject.name, 'sla_hours': sla_hours},
+            request=request,
+        )
+        cls._notify_members(
+            protocol,
+            purpose='protocol_request_received',
+            extra={'response_due_at': response_due_at, 'sla_hours': sla_hours, 'subject': subject.name},
+        )
+        return protocol
+
     @staticmethod
     def _notify_members(protocol, *, purpose, extra=None):
         emails = list(

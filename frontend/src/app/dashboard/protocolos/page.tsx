@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { ProtocolStatusBadge } from '@/components/status';
 import { Card, EmptyState, PageHeader } from '@/components/ui';
+import { OpenRequestPanel } from '@/features/protocols/open-request';
 import { authedData } from '@/lib/api/backend';
 import { PROTOCOL_CATEGORIES, formatDate, label } from '@/lib/utils/format';
 import type { Protocol } from '@/types';
@@ -14,7 +15,11 @@ export default async function ProtocolsPage() {
 
   return (
     <>
-      <PageHeader title="Pedidos" description="Cada pedido tem um número e um histórico próprios." />
+      <PageHeader
+        title="Pedidos"
+        description="Cada pedido tem um número e um histórico próprios."
+        action={<OpenRequestPanel />}
+      />
       <Card>
         {data.protocols.length === 0 ? (
           <EmptyState title="Sem pedidos" />

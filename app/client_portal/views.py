@@ -22,6 +22,7 @@ from .models import (
     Protocol,
     ProtocolComment,
     ProtocolRequirement,
+    ProtocolSubject,
 )
 from .permissions import IsPortalStaff, IsPortalUser, IsStaffManager
 from .serializers import (
@@ -48,10 +49,12 @@ from .serializers import (
     InvitationCreateSerializer,
     InvitationSerializer,
     InvitationValidateSerializer,
+    OpenRequestSerializer,
     ProtocolAssignSerializer,
     ProtocolCreateSerializer,
     ProtocolDetailSerializer,
     ProtocolListSerializer,
+    ProtocolSubjectSerializer,
     ProtocolTransitionSerializer,
     ProtocolUpdateSerializer,
     RequirementCreateSerializer,
@@ -421,6 +424,56 @@ class ProtocolListCreateView(PortalView):
         return api_response(
             data={'protocol': ProtocolDetailSerializer(protocol, context={'request': request}).data},
             message='Protocol created.',
+            status=http_status.HTTP_201_CREATED,
+        )
+
+
+class SubjectListView(PortalView):
+    """Active request subjects the client can choose from (with their SLA)."""
+
+    serializer_class = ProtocolSubjectSerializer
+
+    def get(self, request):
+        subjects = ProtocolSubject.objects.filter(active=True).order_by('order', 'name')
+        return api_response(data={'subjects': ProtocolSubjectSerializer(subjects, many=True).data})
+
+
+class RequestOpenView(PortalView):
+    """Client self-service: opens a protocol for a chosen subject."""
+
+    serializer_class = OpenRequestSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        subject = ProtocolSubject.objects.filter(pk=data['subject'], active=True).first()
+        if not subject:
+            return error('Assunto indisponível.', http_status.HTTP_404_NOT_FOUND)
+
+        clients = selectors.operational_clients(request.user)
+        if data.get('client'):
+            client = clients.filter(pk=data['client']).first()
+        else:
+            client = clients.first()
+        if not client:
+            return error('Cliente não encontrado.', http_status.HTTP_404_NOT_FOUND)
+
+        try:
+            protocol = ProtocolService.open_request(
+                client=client,
+                subject=subject,
+                title=data.get('title', ''),
+                description=data.get('description', ''),
+                created_by=request.user,
+                request=request,
+            )
+        except ValueError as exc:
+            return error(str(exc))
+        return api_response(
+            data={'protocol': ProtocolDetailSerializer(protocol, context={'request': request}).data},
+            message='Pedido aberto.',
             status=http_status.HTTP_201_CREATED,
         )
 

@@ -93,6 +93,17 @@ export type Protocol = {
   competence_month?: number | null;
   competence_year?: number | null;
   completed_at?: string | null;
+  subject?: string | null;
+  subject_name?: string | null;
+  sla_hours?: number | null;
+  response_due_at?: string | null;
+};
+
+export type ProtocolSubject = {
+  id: string;
+  name: string;
+  description: string;
+  sla_hours: number;
 };
 
 export type Requirement = {

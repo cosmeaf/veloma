@@ -36,6 +36,8 @@ from .views import (
     ProtocolListCreateView,
     ProtocolTimelineView,
     ProtocolTransitionView,
+    RequestOpenView,
+    SubjectListView,
     RequirementDetailView,
     RequirementListCreateView,
 )
@@ -93,6 +95,8 @@ urlpatterns = [
         name='member-restore',
     ),
 
+    path('subjects/', SubjectListView.as_view(), name='subject-list'),
+    path('requests/', RequestOpenView.as_view(), name='request-open'),
     path('protocols/', ProtocolListCreateView.as_view(), name='protocol-list'),
     path('protocols/<uuid:protocol_id>/', ProtocolDetailView.as_view(), name='protocol-detail'),
     path('protocols/<uuid:protocol_id>/transition/', ProtocolTransitionView.as_view(), name='protocol-transition'),
