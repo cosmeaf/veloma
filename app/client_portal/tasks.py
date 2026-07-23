@@ -33,7 +33,7 @@ def mirror_document_version_to_dropbox(self, version_id):
     from config.common.storage import StorageService
     from .models import Document, DocumentVersion
 
-    if not DropboxService.is_enabled():
+    if not DropboxService.is_enabled(DropboxService.PURPOSE_UPLOADS):
         return {'skipped': 'dropbox_disabled'}
     version = DocumentVersion.objects.select_related('document', 'document__client', 'document__protocol').filter(
         pk=version_id
@@ -72,7 +72,7 @@ def mirror_terms_acceptance_to_dropbox(self, acceptance_id):
     from .models import TermsAcceptance
     from .services import TermsAcceptanceService
 
-    if not DropboxService.is_enabled():
+    if not DropboxService.is_enabled(DropboxService.PURPOSE_RGPD):
         return {'skipped': 'dropbox_disabled'}
     acceptance = TermsAcceptance.objects.filter(pk=acceptance_id).first()
     if not acceptance:

@@ -18,9 +18,11 @@ from config.authentication.models import (
 from config.authentication.services import AccountLifecycleService, SessionService
 from config.common.crypto import CredentialCipher
 from config.common.email_service import EmailService
+from config.common.dropbox_service import DropboxService
 from config.common.models import (
     AuthenticationSettings,
     DocumentSettings,
+    DropboxSettings,
     EmailDeliveryLog,
     EmailSettings,
     EmailTemplate,
@@ -573,6 +575,67 @@ class EmailVendorAdmin(ModelAdmin):
         modeladmin.message_user(request, f'Test completed. Sent: {sent}. Failed: {failed}.')
 
     send_test_email.short_description = 'Send test email through selected vendors'
+
+
+class DropboxSettingsAdminForm(forms.ModelForm):
+    app_secret = forms.CharField(
+        widget=forms.PasswordInput(render_value=False),
+        required=False,
+        help_text='Leave empty to keep the current app secret.',
+    )
+    refresh_token = forms.CharField(
+        widget=forms.PasswordInput(render_value=False),
+        required=False,
+        help_text='Leave empty to keep the current refresh token.',
+    )
+
+    class Meta:
+        model = DropboxSettings
+        fields = '__all__'
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        app_secret = self.cleaned_data.get('app_secret')
+        if app_secret:
+            instance.encrypted_app_secret = CredentialCipher.encrypt(app_secret)
+        refresh_token = self.cleaned_data.get('refresh_token')
+        if refresh_token:
+            instance.encrypted_refresh_token = CredentialCipher.encrypt(refresh_token)
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
+
+@register(DropboxSettings, site=veloma_admin_site)
+class DropboxSettingsAdmin(SingletonAdmin):
+    form = DropboxSettingsAdminForm
+    fieldsets = (
+        ('Credenciais', {
+            'description': 'App Dropbox com acesso Full Dropbox (escreve nos dois caminhos). '
+            'Os segredos são cifrados e nunca são mostrados de volta.',
+            'fields': ('enabled', 'app_key', 'app_secret', 'refresh_token', 'timeout_seconds'),
+        }),
+        ('Uploads aprovados', {
+            'fields': ('mirror_uploads', 'uploads_path'),
+        }),
+        ('Arquivo RGPD (10 anos)', {
+            'fields': ('mirror_rgpd', 'rgpd_path'),
+        }),
+    )
+    readonly_fields = ('updated_at',)
+    actions = ('test_connection',)
+
+    @staticmethod
+    def test_connection(modeladmin, request, queryset):
+        ok, message = DropboxService.check_connection()
+        modeladmin.message_user(
+            request,
+            message,
+            level=messages.SUCCESS if ok else messages.ERROR,
+        )
+
+    test_connection.short_description = 'Testar ligação ao Dropbox'
 
 
 @register(EmailTemplate, site=veloma_admin_site)

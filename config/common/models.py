@@ -378,3 +378,46 @@ class EmailDeliveryLog(models.Model):
 
     def __str__(self):
         return f'{self.subject} · {self.status}'
+
+
+class DropboxSettings(SingletonModel):
+    """Company Dropbox integration, edited in the Admin (never in settings.py).
+
+    Mirrors two destinations: approved document uploads and the 10-year RGPD
+    consent-proof archive. Credentials are Fernet-encrypted like SMTP passwords
+    and never rendered back into the form. A Full-Dropbox-scoped app is required
+    to write both base paths.
+    """
+
+    enabled = models.BooleanField(default=False)
+    app_key = models.CharField(max_length=255, blank=True)
+    encrypted_app_secret = models.TextField(blank=True, editable=False)
+    encrypted_refresh_token = models.TextField(blank=True, editable=False)
+
+    mirror_uploads = models.BooleanField(default=True)
+    uploads_path = models.CharField(max_length=255, default='/veloma_upload')
+    mirror_rgpd = models.BooleanField(default=True)
+    rgpd_path = models.CharField(max_length=255, default='/rgpd')
+
+    timeout_seconds = models.PositiveSmallIntegerField(default=30)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Dropbox settings'
+        verbose_name_plural = 'Dropbox settings'
+
+    def __str__(self):
+        return 'Dropbox settings'
+
+    def app_secret(self):
+        from config.common.crypto import CredentialCipher
+
+        return CredentialCipher.decrypt(self.encrypted_app_secret) if self.encrypted_app_secret else ''
+
+    def refresh_token(self):
+        from config.common.crypto import CredentialCipher
+
+        return CredentialCipher.decrypt(self.encrypted_refresh_token) if self.encrypted_refresh_token else ''
+
+    def is_configured(self):
+        return bool(self.enabled and self.app_key and self.encrypted_app_secret and self.encrypted_refresh_token)
