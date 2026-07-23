@@ -99,23 +99,15 @@ def _clean_segment(value, fallback='item'):
 
 
 def _upload_relative_path(version):
-    """Builds ``Cliente/Protocolo-ou-Pasta/ficheiro`` for the Dropbox mirror.
+    """Builds the Dropbox mirror path, organised by protocol.
 
-    With a protocol → ``número - título``; otherwise the folder name; failing
-    both, the document category or ``Outros``. Versions after the first get a
-    ``(vN)`` suffix before the extension; the first keeps the clean name.
+    Each request opens a protocol, so documents live under
+    ``<número> - <título>/ficheiro``. Documents without a protocol (legacy or
+    folder-based) fall back to ``Sem protocolo/<Cliente>/<Pasta>/ficheiro`` so
+    they stay identifiable. Versions after the first get a ``(vN)`` suffix
+    before the extension; the first keeps the clean name.
     """
     document = version.document
-    client_part = _clean_segment(getattr(document.client, 'legal_name', '') or str(document.client_id), 'Cliente')
-
-    protocol = document.protocol
-    if protocol:
-        middle = f'{protocol.number} - {protocol.title}'.strip(' -')
-    elif document.folder_id:
-        middle = document.folder.name
-    else:
-        middle = document.category or 'Outros'
-    middle_part = _clean_segment(middle, 'Outros')
 
     name = _clean_segment(version.original_name or str(version.id), 'ficheiro')
     if version.version_number and version.version_number > 1:
@@ -125,7 +117,18 @@ def _upload_relative_path(version):
         else:
             name = f'{name} (v{version.version_number})'
 
-    return f'{client_part}/{middle_part}/{name}'
+    protocol = document.protocol
+    if protocol:
+        head = _clean_segment(f'{protocol.number} - {protocol.title}'.strip(' -'), protocol.number)
+        return f'{head}/{name}'
+
+    # No protocol: keep it identifiable by client and its folder/category.
+    client_part = _clean_segment(getattr(document.client, 'legal_name', '') or str(document.client_id), 'Cliente')
+    if document.folder_id:
+        sub = document.folder.name
+    else:
+        sub = document.category or 'Outros'
+    return f'Sem protocolo/{client_part}/{_clean_segment(sub, "Outros")}/{name}'
 
 
 @shared_task
