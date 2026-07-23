@@ -220,6 +220,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'app.client_portal.tasks.retry_failed_scans',
         'schedule': float(env('SCAN_RETRY_INTERVAL_SECONDS', '3600')),
     },
+    'purge-recycled-documents': {
+        'task': 'app.client_portal.tasks.purge_recycled_documents',
+        'schedule': float(env('RECYCLE_PURGE_INTERVAL_SECONDS', '86400')),
+    },
 }
 
 CACHE_URL = env('CACHE_URL', 'redis://localhost:6379/2')

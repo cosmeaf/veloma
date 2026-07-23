@@ -44,6 +44,9 @@ logger = logging.getLogger('app.client_portal.services')
 
 SAFE_NAME = re.compile(r'[^A-Za-z0-9._-]+')
 
+# Days a deleted upload stays restorable in the recycle before permanent purge.
+RECYCLE_RETENTION_DAYS = 30
+
 
 def user_label(user):
     if user is None:
@@ -1365,6 +1368,89 @@ class DocumentService:
             summary='Document archived.',
             request=request,
         )
+        return document
+
+    @staticmethod
+    @transaction.atomic
+    def delete(*, document, performed_by=None, reason='', request=None):
+        """Manager-only recycle: hides the upload and schedules a permanent purge.
+
+        The stored object is kept until ``purge_after`` (30 days) so a restore is
+        possible; the Dropbox copy is removed now (Dropbox keeps it in its own
+        deleted files for recovery). The log survives as proof.
+        """
+        if document.purged_at:
+            raise ValueError('Este documento já foi removido definitivamente.')
+        now = timezone.now()
+        document.status = Document.STATUS_DELETED
+        document.deleted_at = now
+        document.deleted_by = performed_by
+        document.deleted_by_name_snapshot = user_label(performed_by)
+        document.deletion_reason = (reason or '')[:255]
+        document.purge_after = now + timedelta(days=RECYCLE_RETENTION_DAYS)
+        document.save(update_fields=(
+            'status', 'deleted_at', 'deleted_by', 'deleted_by_name_snapshot',
+            'deletion_reason', 'purge_after', 'updated_at',
+        ))
+        if document.protocol_id:
+            ProtocolEventService.record(
+                protocol=document.protocol,
+                event_type='document_deleted',
+                actor=performed_by,
+                new_value=document.deletion_reason,
+                metadata={'document_id': str(document.id)},
+                request=request,
+            )
+        PortalAudit.record(
+            event_type='document_deleted',
+            actor=performed_by,
+            client=document.client,
+            target=document.title,
+            summary=(f'Documento movido para a reciclagem. {document.deletion_reason}').strip(),
+            metadata={'document_id': str(document.id), 'purge_after': document.purge_after.isoformat()},
+            request=request,
+        )
+        try:
+            from .tasks import delete_document_from_dropbox
+
+            transaction.on_commit(lambda: delete_document_from_dropbox.delay(str(document.id)))
+        except Exception:  # noqa: BLE001
+            logger.exception('Unable to queue the Dropbox delete. document_id=%s', document.id)
+        return document
+
+    @staticmethod
+    @transaction.atomic
+    def restore(*, document, performed_by=None, request=None):
+        if document.purged_at or document.status != Document.STATUS_DELETED:
+            raise ValueError('Este documento não está na reciclagem.')
+        document.status = Document.STATUS_AVAILABLE
+        document.deleted_at = None
+        document.deleted_by = None
+        document.deleted_by_name_snapshot = ''
+        document.deletion_reason = ''
+        document.purge_after = None
+        document.save(update_fields=(
+            'status', 'deleted_at', 'deleted_by', 'deleted_by_name_snapshot',
+            'deletion_reason', 'purge_after', 'updated_at',
+        ))
+        PortalAudit.record(
+            event_type='document_restored',
+            actor=performed_by,
+            client=document.client,
+            target=document.title,
+            summary='Documento restaurado da reciclagem.',
+            metadata={'document_id': str(document.id)},
+            request=request,
+        )
+        try:
+            from .tasks import mirror_document_version_to_dropbox
+
+            if document.current_version_id:
+                transaction.on_commit(
+                    lambda: mirror_document_version_to_dropbox.delay(str(document.current_version_id))
+                )
+        except Exception:  # noqa: BLE001
+            logger.exception('Unable to re-mirror on restore. document_id=%s', document.id)
         return document
 
     @staticmethod

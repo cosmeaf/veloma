@@ -647,6 +647,7 @@ class Document(models.Model):
     STATUS_REJECTED = 'rejected'
     STATUS_AVAILABLE = 'available'
     STATUS_ARCHIVED = 'archived'
+    STATUS_DELETED = 'deleted'
     STATUS_CHOICES = (
         (STATUS_PENDING_UPLOAD, 'Pending upload'),
         (STATUS_PENDING_SCAN, 'Pending scan'),
@@ -656,6 +657,7 @@ class Document(models.Model):
         (STATUS_REJECTED, 'Rejected'),
         (STATUS_AVAILABLE, 'Available'),
         (STATUS_ARCHIVED, 'Archived'),
+        (STATUS_DELETED, 'Deleted'),
     )
 
     VISIBILITY_CLIENT_AND_STAFF = 'client_and_staff'
@@ -716,6 +718,21 @@ class Document(models.Model):
     uploader_email_snapshot = models.EmailField(blank=True)
     rejection_reason = models.CharField(max_length=255, blank=True)
     archived_at = models.DateTimeField(blank=True, null=True, db_index=True)
+    # Recycle bin: a manager can delete an upload; it stays restorable until
+    # purge_after, then a task removes the stored object permanently. The log
+    # (who/when/why) is kept as proof even after the file is gone.
+    deleted_at = models.DateTimeField(blank=True, null=True, db_index=True)
+    deleted_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='veloma_deleted_documents',
+    )
+    deleted_by_name_snapshot = models.CharField(max_length=255, blank=True)
+    deletion_reason = models.CharField(max_length=255, blank=True)
+    purge_after = models.DateTimeField(blank=True, null=True, db_index=True)
+    purged_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 

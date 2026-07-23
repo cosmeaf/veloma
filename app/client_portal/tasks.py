@@ -61,6 +61,53 @@ def mirror_document_version_to_dropbox(self, version_id):
 
 
 @shared_task(bind=True, max_retries=5)
+def delete_document_from_dropbox(self, document_id):
+    """Removes every version of a recycled document from the Dropbox mirror."""
+    from config.common.dropbox_service import DropboxService
+    from .models import Document
+
+    if not DropboxService.is_enabled(DropboxService.PURPOSE_UPLOADS):
+        return {'skipped': 'dropbox_disabled'}
+    document = Document.objects.select_related('client', 'protocol', 'folder').filter(pk=document_id).first()
+    if not document:
+        return {'skipped': 'document_not_found'}
+    deleted = 0
+    try:
+        for version in document.versions.all():
+            if DropboxService.delete_path(
+                purpose=DropboxService.PURPOSE_UPLOADS,
+                relative_path=_upload_relative_path(version),
+            ):
+                deleted += 1
+    except Exception as exc:  # noqa: BLE001
+        logger.exception('Dropbox delete failed. document_id=%s', document_id)
+        raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
+    return {'document_id': str(document_id), 'deleted': deleted}
+
+
+@shared_task
+def purge_recycled_documents():
+    """Permanently removes stored objects of documents past their recycle window."""
+    from config.common.storage import StorageService
+    from .models import Document
+
+    now = timezone.now()
+    documents = Document.objects.filter(
+        status=Document.STATUS_DELETED,
+        purged_at__isnull=True,
+        purge_after__lt=now,
+    )
+    purged = 0
+    for document in documents:
+        for version in document.versions.exclude(storage_key=''):
+            StorageService.delete(version.storage_key)
+        document.purged_at = now
+        document.save(update_fields=('purged_at', 'updated_at'))
+        purged += 1
+    return {'purged': purged}
+
+
+@shared_task(bind=True, max_retries=5)
 def mirror_terms_acceptance_to_dropbox(self, acceptance_id):
     """Copies a consent proof PDF to the RGPD Dropbox archive (10-year retention)."""
     from config.common.dropbox_service import DropboxService

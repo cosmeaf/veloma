@@ -1,5 +1,6 @@
 import { DocumentStatusBadge } from '@/components/status';
 import { Card, CardHeader, EmptyState } from '@/components/ui';
+import { DeleteDocumentButton } from '@/features/documents/delete-document-button';
 import { DownloadButton } from '@/features/documents/download-button';
 import { formatBytes, formatDateTime } from '@/lib/utils/format';
 import type { PortalDocument } from '@/types';
@@ -8,10 +9,12 @@ export function DocumentList({
   documents,
   title = 'Documentos',
   description,
+  canDelete = false,
 }: {
   documents: PortalDocument[];
   title?: string;
   description?: string;
+  canDelete?: boolean;
 }) {
   return (
     <Card>
@@ -41,6 +44,7 @@ export function DocumentList({
               <div className="flex items-center gap-2">
                 <DocumentStatusBadge status={document.status} />
                 {document.status === 'available' ? <DownloadButton documentId={document.id} /> : null}
+                {canDelete ? <DeleteDocumentButton documentId={document.id} /> : null}
               </div>
             </li>
           ))}

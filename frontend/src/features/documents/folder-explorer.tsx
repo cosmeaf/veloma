@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { DocumentStatusBadge } from '@/components/status';
 import { Badge, Card, CardHeader, EmptyState } from '@/components/ui';
+import { DeleteDocumentButton } from '@/features/documents/delete-document-button';
 import { DownloadButton } from '@/features/documents/download-button';
 import { formatBytes, formatDateTime } from '@/lib/utils/format';
 import type { PortalDocument } from '@/types';
@@ -54,6 +55,7 @@ export function FolderExplorer({
   basePath,
   query = '',
   action,
+  canDelete = false,
 }: {
   folders: Folder[];
   documents: PortalDocument[];
@@ -61,6 +63,7 @@ export function FolderExplorer({
   basePath: string;
   query?: string;
   action?: React.ReactNode;
+  canDelete?: boolean;
 }) {
   const crumbs = buildBreadcrumbs(folders, currentId);
   const subfolders = childrenOf(folders, currentId);
@@ -138,6 +141,7 @@ export function FolderExplorer({
               <div className="flex items-center gap-2">
                 <DocumentStatusBadge status={document.status} />
                 {document.status === 'available' ? <DownloadButton documentId={document.id} /> : null}
+                {canDelete ? <DeleteDocumentButton documentId={document.id} /> : null}
               </div>
             </li>
           ))}

@@ -11,6 +11,7 @@ from rest_framework.test import APITestCase
 from config.common.models import DocumentSettings, EmailTemplate, SecuritySettings
 from config.common.storage import StorageService
 
+from . import selectors
 from .models import (
     Client,
     ClientFolder,
@@ -440,6 +441,29 @@ class ProtocolTests(ClientPortalTestCase):
 
 
 class DocumentTests(ClientPortalTestCase):
+    def test_delete_recycles_and_restore_brings_back(self):
+        user, _member = self._member()
+        document, _version = DocumentService.upload(
+            client=self.client_record, upload=self._upload(), uploaded_by=user,
+        )
+        document.refresh_from_db()
+        self.assertEqual(document.status, Document.STATUS_AVAILABLE)
+
+        DocumentService.delete(document=document, performed_by=self.manager, reason='duplicado')
+        document.refresh_from_db()
+        self.assertEqual(document.status, Document.STATUS_DELETED)
+        self.assertEqual(document.deleted_by, self.manager)
+        self.assertEqual(document.deletion_reason, 'duplicado')
+        self.assertIsNotNone(document.purge_after)
+        # Hidden from normal listings, visible in the recycle for a manager.
+        self.assertNotIn(document.id, list(selectors.visible_documents(self.manager).values_list('id', flat=True)))
+        self.assertIn(document.id, list(selectors.recycled_documents(self.manager).values_list('id', flat=True)))
+
+        DocumentService.restore(document=document, performed_by=self.manager)
+        document.refresh_from_db()
+        self.assertEqual(document.status, Document.STATUS_AVAILABLE)
+        self.assertIsNone(document.purge_after)
+
     def test_upload_creates_document_and_version(self):
         user, _member = self._member()
         protocol = self._protocol()

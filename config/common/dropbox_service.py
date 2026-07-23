@@ -106,6 +106,25 @@ class DropboxService:
             return None
 
     @classmethod
+    def delete_path(cls, *, purpose, relative_path):
+        """Deletes a mirrored file. On Dropbox this moves it to deleted files
+        (recoverable natively for the retention window). Returns True on success.
+        """
+        if not cls.is_enabled(purpose):
+            return False
+        settings = cls._settings()
+        base = cls._base_path(settings, purpose)
+        clean = relative_path.strip('/').replace('//', '/')
+        full_path = f'{base}/{clean}' if base else f'/{clean}'
+        try:
+            cls._client(settings).files_delete_v2(full_path)
+            logger.info('Deleted from Dropbox. purpose=%s path=%s', purpose, full_path)
+            return True
+        except Exception:  # noqa: BLE001
+            logger.exception('Dropbox delete failed. purpose=%s path=%s', purpose, full_path)
+            return False
+
+    @classmethod
     def check_connection(cls):
         """Verifies credentials against the Dropbox API. Returns (ok, message)."""
         settings = cls._settings()

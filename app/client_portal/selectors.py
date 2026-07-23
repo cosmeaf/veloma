@@ -60,6 +60,8 @@ def visible_protocols(user):
 
 def visible_documents(user):
     queryset = Document.objects.select_related('client', 'protocol', 'folder', 'current_version')
+    # Recycled documents never appear in the normal listings.
+    queryset = queryset.exclude(status=Document.STATUS_DELETED)
     if is_staff_member(user):
         return queryset.filter(client__in=visible_clients(user))
     # A document inside an internal folder stays internal, whatever its own flag.
@@ -67,6 +69,17 @@ def visible_documents(user):
         queryset.filter(client_id__in=active_membership_ids(user))
         .exclude(visibility=Document.VISIBILITY_STAFF_ONLY)
         .exclude(folder__visibility=ClientFolder.VISIBILITY_STAFF_ONLY)
+    )
+
+
+def recycled_documents(user):
+    """Documents in the recycle bin (managers only); newest deletions first."""
+    if not is_manager(user):
+        return Document.objects.none()
+    return (
+        Document.objects.select_related('client', 'protocol', 'deleted_by')
+        .filter(status=Document.STATUS_DELETED, purged_at__isnull=True)
+        .order_by('-deleted_at')
     )
 
 

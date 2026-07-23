@@ -57,6 +57,7 @@ from .serializers import (
     ProtocolSubjectSerializer,
     ProtocolTransitionSerializer,
     ProtocolUpdateSerializer,
+    RecycledDocumentSerializer,
     RequirementCreateSerializer,
     RequirementSerializer,
     RequirementUpdateSerializer,
@@ -985,6 +986,52 @@ class DocumentArchiveView(PortalView):
             return error('Document not found.', http_status.HTTP_404_NOT_FOUND)
         document = DocumentService.archive(document=document, performed_by=request.user, request=request)
         return api_response(data={'document': DocumentSerializer(document).data}, message='Document archived.')
+
+
+class DocumentDeleteView(PortalView):
+    """Manager-only: moves an upload to the recycle bin."""
+
+    permission_classes = [IsStaffManager]
+
+    def post(self, request, document_id):
+        document = selectors.visible_documents(request.user).filter(pk=document_id).first()
+        if not document:
+            return error('Documento não encontrado.', http_status.HTTP_404_NOT_FOUND)
+        try:
+            document = DocumentService.delete(
+                document=document,
+                performed_by=request.user,
+                reason=request.data.get('reason', ''),
+                request=request,
+            )
+        except ValueError as exc:
+            return error(str(exc))
+        return api_response(data={'document': DocumentSerializer(document).data}, message='Documento eliminado.')
+
+
+class RecycleListView(PortalView):
+    """Recycle bin: deleted uploads with who/when. Content is manager-scoped by
+    the selector (empty for non-managers); restore stays manager-only."""
+
+    permission_classes = [IsPortalStaff]
+
+    def get(self, request):
+        documents = selectors.recycled_documents(request.user)
+        return api_response(data={'documents': self.paginate(documents, RecycledDocumentSerializer)})
+
+
+class DocumentRestoreView(PortalView):
+    permission_classes = [IsStaffManager]
+
+    def post(self, request, document_id):
+        document = selectors.recycled_documents(request.user).filter(pk=document_id).first()
+        if not document:
+            return error('Documento não encontrado na reciclagem.', http_status.HTTP_404_NOT_FOUND)
+        try:
+            document = DocumentService.restore(document=document, performed_by=request.user, request=request)
+        except ValueError as exc:
+            return error(str(exc))
+        return api_response(data={'document': DocumentSerializer(document).data}, message='Documento restaurado.')
 
 
 # ------------------------------------------------------------------ dashboards

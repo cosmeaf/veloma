@@ -4,6 +4,7 @@ import {
   FolderTree,
   LayoutDashboard,
   ShieldCheck,
+  Trash2,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -36,6 +37,7 @@ export const STAFF_NAVIGATION: NavSection[] = [
       { href: '/staff', label: 'Resumo', icon: LayoutDashboard, nested: false },
       { href: '/staff/protocolos', label: 'Protocolos', icon: FileStack },
       { href: '/staff/documentos', label: 'Documentos', icon: FolderTree },
+      { href: '/staff/reciclagem', label: 'Reciclagem', icon: Trash2 },
     ],
   },
   {

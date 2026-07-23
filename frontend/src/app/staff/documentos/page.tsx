@@ -7,6 +7,7 @@ import { FolderExplorer, type Folder } from '@/features/documents/folder-explore
 import { NewFolderForm } from '@/features/documents/new-folder-form';
 import { DocumentUploader } from '@/features/documents/uploader';
 import { authedData } from '@/lib/api/backend';
+import { getCurrentUser, isManager } from '@/lib/auth/session';
 import type { ClientSummary, PortalDocument } from '@/types';
 
 export const metadata: Metadata = { title: 'Documentos' };
@@ -17,6 +18,8 @@ export default async function StaffDocumentsPage({
   searchParams: Promise<{ client?: string; folder?: string }>;
 }) {
   const { client: clientId, folder } = await searchParams;
+  const user = await getCurrentUser();
+  const canDelete = user ? isManager(user) : false;
   const list = await authedData<{ clients: ClientSummary[] }>('/api/client-portal/clients/');
 
   // Files needing attention are shown regardless of the folder being browsed.
@@ -30,7 +33,7 @@ export default async function StaffDocumentsPage({
       <>
         <PageHeader title="Documentos" description="Escolha um cliente para navegar na estrutura de pastas." />
         {attention.length ? (
-          <DocumentList documents={attention} title="A precisar de atenção" description="Em análise, bloqueados ou rejeitados." />
+          <DocumentList documents={attention} title="A precisar de atenção" description="Em análise, bloqueados ou rejeitados." canDelete={canDelete} />
         ) : null}
         <Card>
           <CardHeader title="Clientes" />
@@ -82,6 +85,7 @@ export default async function StaffDocumentsPage({
         basePath="/staff/documentos"
         query={`client=${clientId}`}
         action={<NewFolderForm clientId={clientId} parentId={folder ?? null} />}
+        canDelete={canDelete}
       />
       <DocumentUploader clientId={clientId} folderId={folder} />
     </>
