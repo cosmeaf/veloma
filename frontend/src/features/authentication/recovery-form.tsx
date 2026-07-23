@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Alert, Button, Field, Input } from '@/components/ui';
@@ -29,14 +29,27 @@ type Stage =
  * The uid and the opaque reset token live in component state for the duration
  * of the flow only, exactly as the backend contract describes.
  */
+/** Seconds to wait before the code can be resent (matches the backend default). */
+const RESEND_COOLDOWN = 60;
+
 export function RecoveryForm() {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>({ step: 'email' });
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+  const [resending, setResending] = useState(false);
 
   const emailForm = useForm<RecoveryInput>({ resolver: zodResolver(recoverySchema) });
   const otpForm = useForm<OtpInput>({ resolver: zodResolver(otpSchema) });
   const resetForm = useForm<ResetInput>({ resolver: zodResolver(resetSchema) });
+
+  // Tick the resend countdown down to zero.
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((value) => value - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   async function post(body: Record<string, unknown>, endpoint: string) {
     const response = await fetch(endpoint, {
@@ -55,6 +68,23 @@ export function RecoveryForm() {
       return;
     }
     setStage({ step: 'otp', challengeId: payload.challenge_id });
+    setCooldown(RESEND_COOLDOWN);
+  }
+
+  async function resendCode() {
+    if (stage.step !== 'otp' || cooldown > 0 || resending) return;
+    setError(null);
+    setNotice(null);
+    setResending(true);
+    const { ok, payload } = await post({ action: 'resend', challenge_id: stage.challengeId }, '/api/auth/otp');
+    setResending(false);
+    if (!ok || !payload.success) {
+      setError(payload.message ?? 'Não foi possível reenviar o código.');
+      return;
+    }
+    setStage({ step: 'otp', challengeId: payload.challenge_id ?? stage.challengeId });
+    setNotice('Enviámos um novo código para o seu e-mail.');
+    setCooldown(RESEND_COOLDOWN);
   }
 
   async function submitOtp(values: OtpInput) {
@@ -113,14 +143,37 @@ export function RecoveryForm() {
     return (
       <form onSubmit={otpForm.handleSubmit(submitOtp)} className="space-y-4">
         <Alert tone="info">Se a conta existir, enviámos um código para o e-mail indicado.</Alert>
+        {notice ? <Alert tone="success">{notice}</Alert> : null}
         {error ? <Alert>{error}</Alert> : null}
         <Field label="Código de confirmação" error={otpForm.formState.errors.code?.message}>
-          <Input {...otpForm.register('code')} inputMode="numeric" placeholder="000000" autoFocus />
+          <Input
+            {...otpForm.register('code')}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            placeholder="000000"
+            autoFocus
+            className="text-center font-mono text-2xl tracking-[0.6em]"
+          />
         </Field>
         <Button type="submit" className="w-full" disabled={otpForm.formState.isSubmitting}>
           {otpForm.formState.isSubmitting ? <Loader2 className="size-4 animate-spin" /> : null}
           Confirmar código
         </Button>
+        <div className="text-center text-sm">
+          {cooldown > 0 ? (
+            <span className="text-navy/55">Reenviar código em {cooldown}s</span>
+          ) : (
+            <button
+              type="button"
+              onClick={resendCode}
+              disabled={resending}
+              className="text-navy font-medium hover:underline disabled:opacity-60"
+            >
+              {resending ? 'A reenviar…' : 'Reenviar código'}
+            </button>
+          )}
+        </div>
       </form>
     );
   }
