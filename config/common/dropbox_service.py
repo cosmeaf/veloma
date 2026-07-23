@@ -52,15 +52,28 @@ class DropboxService:
 
     @staticmethod
     def _client(settings):
+        """Returns a user-scoped Dropbox client.
+
+        For Dropbox Business (team) apps, acts as the configured team member (or
+        the authenticated team admin when none is set); for individual apps,
+        returns a plain client.
+        """
         # Imported lazily so the dependency is optional at runtime.
         import dropbox
 
-        return dropbox.Dropbox(
+        common = dict(
             app_key=settings.app_key,
             app_secret=settings.app_secret(),
             oauth2_refresh_token=settings.refresh_token(),
             timeout=settings.timeout_seconds,
         )
+        if settings.is_team:
+            team = dropbox.DropboxTeam(**common)
+            member_id = settings.team_member_id
+            if not member_id:
+                member_id = team.team_token_get_authenticated_admin().admin_profile.team_member_id
+            return team.as_user(member_id)
+        return dropbox.Dropbox(**common)
 
     @classmethod
     def upload_bytes(cls, *, purpose, relative_path, content):

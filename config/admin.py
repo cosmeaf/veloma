@@ -616,6 +616,11 @@ class DropboxSettingsAdmin(SingletonAdmin):
             'Os segredos são cifrados e nunca são mostrados de volta.',
             'fields': ('enabled', 'app_key', 'app_secret', 'refresh_token', 'timeout_seconds'),
         }),
+        ('Equipa (Dropbox Business)', {
+            'description': 'Se a conta for Business, ative e opcionalmente indique o membro; '
+            'por omissão usa o administrador da equipa.',
+            'fields': ('is_team', 'team_member_id'),
+        }),
         ('Uploads aprovados', {
             'fields': ('mirror_uploads', 'uploads_path'),
         }),

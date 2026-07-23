@@ -394,10 +394,15 @@ class DropboxSettings(SingletonModel):
     encrypted_app_secret = models.TextField(blank=True, editable=False)
     encrypted_refresh_token = models.TextField(blank=True, editable=False)
 
+    # Dropbox Business (team) apps need a member to act as. When is_team is on and
+    # team_member_id is blank, the authenticated team admin is used automatically.
+    is_team = models.BooleanField(default=False, help_text='Dropbox Business (team) app.')
+    team_member_id = models.CharField(max_length=128, blank=True, help_text='Optional; defaults to the team admin.')
+
     mirror_uploads = models.BooleanField(default=True)
-    uploads_path = models.CharField(max_length=255, default='/veloma_upload')
+    uploads_path = models.CharField(max_length=255, default='/Apps/veloma_upload')
     mirror_rgpd = models.BooleanField(default=True)
-    rgpd_path = models.CharField(max_length=255, default='/rgpd')
+    rgpd_path = models.CharField(max_length=255, default='/Apps/rgpd')
 
     timeout_seconds = models.PositiveSmallIntegerField(default=30)
     updated_at = models.DateTimeField(auto_now=True)
