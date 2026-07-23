@@ -6,7 +6,6 @@ import { useState } from 'react';
 
 import { useToast } from '@/components/toast';
 import { Alert, Button, Card, CardHeader, Field, Input, Select, Textarea } from '@/components/ui';
-import { formatDateTime } from '@/lib/utils/format';
 import type { Protocol, ProtocolSubject } from '@/types';
 
 /**
@@ -65,11 +64,7 @@ export function OpenRequestPanel() {
       <Card className="border-emerald-200 bg-emerald-50/60">
         <div className="space-y-3 px-5 py-4">
           <p className="text-navy text-sm font-medium">Pedido {created.number} aberto.</p>
-          <p className="text-navy/70 text-sm">
-            Recebemos o seu pedido. A Veloma responde
-            {created.response_due_at ? ` até ${formatDateTime(created.response_due_at)}` : ' dentro do prazo indicado'}
-            {created.sla_hours ? ` (${created.sla_hours}h).` : '.'}
-          </p>
+          <p className="text-navy/70 text-sm">Recebemos o seu envio. Pode agora anexar os documentos.</p>
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => router.push(`/dashboard/protocolos/${created.id}`)}>Enviar documentos</Button>
             <Button variant="secondary" onClick={() => setCreated(null)}>
@@ -99,7 +94,7 @@ export function OpenRequestPanel() {
           <Select value={subjectId} onChange={(event) => setSubjectId(event.target.value)}>
             {(subjects ?? []).map((subject) => (
               <option key={subject.id} value={subject.id}>
-                {subject.name} — resposta até {subject.sla_hours}h
+                {subject.name}
               </option>
             ))}
           </Select>

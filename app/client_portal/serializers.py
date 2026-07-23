@@ -306,7 +306,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'client', 'client_name', 'protocol', 'folder', 'title', 'original_name',
             'category', 'status', 'visibility', 'uploader_name_snapshot', 'current_version',
-            'rejection_reason', 'archived_at', 'created_at',
+            'rejection_reason', 'note', 'archived_at', 'created_at',
         )
         read_only_fields = fields
 
@@ -331,6 +331,7 @@ class DocumentUploadSerializer(serializers.Serializer):
     folder = serializers.UUIDField(required=False, allow_null=True)
     requirement = serializers.UUIDField(required=False, allow_null=True)
     title = serializers.CharField(max_length=255, required=False, allow_blank=True, default='')
+    note = serializers.CharField(required=False, allow_blank=True, default='')
     visibility = serializers.ChoiceField(
         choices=Document.VISIBILITY_CHOICES,
         default=Document.VISIBILITY_CLIENT_AND_STAFF,

@@ -4,7 +4,7 @@ import { Loader2, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
-import { Alert, Button, Card, CardHeader } from '@/components/ui';
+import { Alert, Button, Card, CardHeader, Field, Textarea } from '@/components/ui';
 import { formatBytes } from '@/lib/utils/format';
 
 type Upload = { name: string; size: number; state: 'uploading' | 'done' | 'error'; message?: string };
@@ -32,6 +32,7 @@ export function DocumentUploader({
   const [dragging, setDragging] = useState(false);
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState('');
 
   async function send(files: FileList | null) {
     if (!files?.length) return;
@@ -41,6 +42,7 @@ export function DocumentUploader({
       setUploads((current) => [...current, { name: file.name, size: file.size, state: 'uploading' }]);
       const body = new FormData();
       body.set('file', file);
+      if (note.trim()) body.set('note', note.trim());
       if (protocolId) body.set('protocol', protocolId);
       else if (clientId) body.set('client', clientId);
       if (folderId) body.set('folder', folderId);
@@ -59,6 +61,7 @@ export function DocumentUploader({
       );
       if (!ok) setError(payload.message ?? 'O envio falhou.');
     }
+    setNote('');
     router.refresh();
   }
 
@@ -74,6 +77,15 @@ export function DocumentUploader({
       />
       <div className="space-y-3 px-5 py-4">
         {error ? <Alert>{error}</Alert> : null}
+
+        <Field label="Observação (opcional)">
+          <Textarea
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder="Uma nota para acompanhar este envio."
+            rows={2}
+          />
+        </Field>
 
         <div
           onDragOver={(event) => {

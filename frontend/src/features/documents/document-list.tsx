@@ -40,6 +40,9 @@ export function DocumentList({
                 {document.rejection_reason ? (
                   <p className="mt-1 text-xs text-red-600">{document.rejection_reason}</p>
                 ) : null}
+                {document.note ? (
+                  <p className="mt-1 text-xs text-navy/70 italic">“{document.note}”</p>
+                ) : null}
               </div>
               <div className="flex items-center gap-2">
                 <DocumentStatusBadge status={document.status} />

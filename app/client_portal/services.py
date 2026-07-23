@@ -1150,7 +1150,7 @@ class DocumentService:
 
     @classmethod
     @transaction.atomic
-    def upload(cls, *, client, upload, title='', protocol=None, folder=None, uploaded_by=None,
+    def upload(cls, *, client, upload, title='', note='', protocol=None, folder=None, uploaded_by=None,
                requirement=None, visibility=Document.VISIBILITY_CLIENT_AND_STAFF, is_staff=True, request=None):
         if not client.is_active:
             raise ValueError('Uploads are blocked for inactive clients.')
@@ -1176,6 +1176,7 @@ class DocumentService:
             folder=folder,
             title=(title or name)[:255],
             original_name=name,
+            note=(note or '').strip(),
             category=extension,
             status=Document.STATUS_PENDING_SCAN,
             visibility=visibility,

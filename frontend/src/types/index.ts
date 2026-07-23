@@ -170,6 +170,7 @@ export type PortalDocument = {
   uploader_name_snapshot: string;
   current_version: DocumentVersion | null;
   rejection_reason: string;
+  note?: string;
   archived_at: string | null;
   created_at: string;
 };

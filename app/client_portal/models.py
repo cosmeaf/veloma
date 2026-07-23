@@ -687,6 +687,8 @@ class Document(models.Model):
     )
     title = models.CharField(max_length=255)
     original_name = models.CharField(max_length=255)
+    # Free-text observation left by whoever sent the file (client or staff).
+    note = models.TextField(blank=True)
     current_version = models.ForeignKey(
         'DocumentVersion',
         on_delete=models.SET_NULL,

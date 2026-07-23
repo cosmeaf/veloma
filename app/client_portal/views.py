@@ -854,6 +854,7 @@ class DocumentUploadView(PortalView):
                 client=client,
                 upload=data['file'],
                 title=data['title'],
+                note=data.get('note', ''),
                 protocol=protocol,
                 folder=folder,
                 requirement=requirement,
