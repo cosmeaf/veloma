@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { LogoutButton } from '@/components/logout-button';
+import { useToast } from '@/components/toast';
 import { Alert, Badge, Button, Card, CardHeader, EmptyState, Field, Input, PageHeader } from '@/components/ui';
 import { formatDateTime } from '@/lib/utils/format';
 import { changePasswordSchema, type ChangePasswordInput } from '@/lib/validation/schemas';
@@ -31,6 +32,7 @@ export function SecurityPanel({
   history: AccessEvent[];
 }) {
   const router = useRouter();
+  const toast = useToast();
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [twoFactor, setTwoFactor] = useState(Boolean(user.two_factor_email));
@@ -69,13 +71,25 @@ export function SecurityPanel({
     setSavingTwoFactor(false);
     if (response.ok) {
       setTwoFactor(next);
+      toast.success(
+        next
+          ? 'Verificação em duas etapas ativada. A partir de agora recebe um código por e-mail ao entrar.'
+          : 'Verificação em duas etapas desativada.',
+      );
       router.refresh();
+    } else {
+      toast.error('Não foi possível atualizar a verificação em duas etapas.');
     }
   }
 
   async function revoke(sessionId: string) {
     const response = await fetch(`/api/auth/sessions/${sessionId}/revoke`, { method: 'POST' });
-    if (response.ok) router.refresh();
+    if (response.ok) {
+      toast.success('Sessão revogada.');
+      router.refresh();
+    } else {
+      toast.error('Não foi possível revogar a sessão.');
+    }
   }
 
   const active = sessions.filter((session) => session.status === 'active');

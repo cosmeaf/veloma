@@ -92,7 +92,9 @@ export function SidebarShell({
   );
 
   return (
-    <div className="flex min-h-full flex-1">
+    // Fixed viewport height: the sidebar and header stay put and only the main
+    // content scrolls, so long staff pages never push the whole screen away.
+    <div className="flex h-dvh overflow-hidden">
       {/* Desktop sidebar — collapsible */}
       <aside
         className={cn(
@@ -160,7 +162,8 @@ export function SidebarShell({
             <HeaderActions />
           </div>
         </header>
-        <main className="w-full flex-1 space-y-6 px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+        {/* Only this area scrolls. */}
+        <main className="w-full flex-1 space-y-6 overflow-y-auto px-4 py-8 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
   );
