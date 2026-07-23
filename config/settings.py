@@ -235,6 +235,10 @@ CREDENTIALS_ENCRYPTION_KEY = env(
 )
 EMAIL_CREDENTIALS_ENCRYPTION_KEY = CREDENTIALS_ENCRYPTION_KEY
 FRONTEND_URL = env('FRONTEND_URL', 'https://veloma.app').rstrip('/')
+# The default administrator account can never be deactivated, archived or deleted.
+PROTECTED_ADMIN_EMAIL = env('PROTECTED_ADMIN_EMAIL', env('DJANGO_SUPERUSER_EMAIL', ''))
+# Base URL for the admin password-reset link sent by email.
+FRONTEND_ADMIN_URL = env('FRONTEND_ADMIN_URL', 'https://api.veloma.app').rstrip('/')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', 'no-reply@veloma.local')
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 

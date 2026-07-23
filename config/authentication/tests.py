@@ -413,3 +413,48 @@ class FirstAccessTests(APITestCase):
             'password2': 'PessoalForte@2026',
         }, format='json')
         self.assertEqual(response.status_code, 400)
+
+
+@override_settings(
+    CELERY_TASK_ALWAYS_EAGER=True,
+    CELERY_TASK_EAGER_PROPAGATES=True,
+    CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}},
+    PROTECTED_ADMIN_EMAIL='cosme.alex@gmail.com',
+)
+class ProtectedAdminTests(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command('bootstrap_veloma', verbosity=0)
+        EmailTemplate.objects.update(delivery_mode='sync')
+
+    def test_default_admin_cannot_be_deactivated_or_archived(self):
+        from config.authentication.services import AccountLifecycleService
+
+        admin = User.objects.create_superuser(
+            username='cosme.alex@gmail.com', email='cosme.alex@gmail.com', password='StrongPassword@123',
+        )
+        actor = User.objects.create_superuser(
+            username='other-admin@example.com', email='other-admin@example.com', password='StrongPassword@123',
+        )
+        with self.assertRaises(ValueError):
+            AccountLifecycleService.deactivate(user=admin, performed_by=actor)
+        with self.assertRaises(ValueError):
+            AccountLifecycleService.archive(user=admin, performed_by=actor)
+        admin.refresh_from_db()
+        self.assertTrue(admin.is_active)
+
+    def test_any_superuser_is_protected_from_archival(self):
+        from config.authentication.services import AccountLifecycleService
+
+        su = User.objects.create_superuser(
+            username='su@example.com', email='su@example.com', password='StrongPassword@123',
+        )
+        actor = User.objects.create_superuser(
+            username='actor@example.com', email='actor@example.com', password='StrongPassword@123',
+        )
+        with self.assertRaises(ValueError):
+            AccountLifecycleService.archive(user=su, performed_by=actor)
+
+    def test_admin_password_reset_page_is_available(self):
+        response = self.client.get('/admin/password-reset/')
+        self.assertEqual(response.status_code, 200)

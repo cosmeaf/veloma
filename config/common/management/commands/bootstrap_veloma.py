@@ -46,6 +46,7 @@ TEMPLATES = {
     'token_revoked': ('Token revogado', 'emails/token_revoked.html', 'emails/token_revoked.txt'),
     'security_alert': ('Alerta de segurança', 'emails/security_alert.html', 'emails/security_alert.txt'),
     'rate_limit_reached': ('Limite de pedidos atingido', 'emails/rate_limit_reached.html', 'emails/rate_limit_reached.txt'),
+    'admin_password_reset': ('Recuperação de acesso ao Admin', 'emails/admin_password_reset.html', 'emails/admin_password_reset.txt'),
     # Client portal
     'client_invitation': ('Convite de acesso à Veloma', 'emails/client_invitation.html', 'emails/client_invitation.txt'),
     'client_invitation_reminder': ('O seu convite está a expirar', 'emails/client_invitation_reminder.html', 'emails/client_invitation_reminder.txt'),

@@ -4,9 +4,17 @@ import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { Button } from '@/components/ui';
+import { Button, cn } from '@/components/ui';
 
-export function LogoutButton({ all = false, label = 'Sair' }: { all?: boolean; label?: string }) {
+export function LogoutButton({
+  all = false,
+  label = 'Sair',
+  onNavy = false,
+}: {
+  all?: boolean;
+  label?: string;
+  onNavy?: boolean;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
@@ -22,7 +30,13 @@ export function LogoutButton({ all = false, label = 'Sair' }: { all?: boolean; l
   }
 
   return (
-    <Button variant="secondary" size="sm" onClick={logout} disabled={busy}>
+    <Button
+      variant="secondary"
+      size="sm"
+      onClick={logout}
+      disabled={busy}
+      className={cn(onNavy && 'border-white/20 bg-white/10 text-ivory hover:bg-white/20')}
+    >
       <LogOut className="size-4" aria-hidden />
       {label}
     </Button>

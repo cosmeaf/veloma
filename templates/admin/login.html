@@ -1,0 +1,9 @@
+{% extends "admin/login.html" %}
+{# Overrides the admin login while inheriting it: Django resolves the extends to
+   the next "admin/login.html" in the loader chain (Django's own). #}
+{% block content %}
+{{ block.super }}
+<div class="submit-row" style="text-align:center;padding-top:0">
+  <a href="{% url 'admin_password_reset' %}">Esqueceu a palavra-passe?</a>
+</div>
+{% endblock %}

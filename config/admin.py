@@ -160,6 +160,16 @@ class VelomaUserAdmin(UserAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def _protected(self, obj):
+        from config.authentication.services import _is_protected_admin
+        return bool(obj and _is_protected_admin(obj))
+
+    def has_change_permission(self, request, obj=None):
+        # The protected administrator can only be edited by itself.
+        if self._protected(obj) and obj != request.user:
+            return False
+        return super().has_change_permission(request, obj)
+
     @action(description='Desativar contas selecionadas')
     def deactivate_accounts(self, request, queryset):
         run_lifecycle_action(

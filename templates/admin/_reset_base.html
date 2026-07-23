@@ -1,0 +1,27 @@
+{% load static %}<!doctype html>
+<html lang="pt-PT"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ title }} · Veloma</title>
+<style>
+  body{margin:0;background:#20193B;color:#FFFEF0;font-family:ui-sans-serif,system-ui,Segoe UI,Arial,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 16px}
+  .card{width:100%;max-width:420px}
+  .brand{font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#F3D994;text-align:center;font-size:14px}
+  h1{font-family:Georgia,serif;font-size:24px;text-align:center;margin:18px 0 4px}
+  p.lead{color:rgba(255,254,240,.6);text-align:center;font-size:14px;margin:0 0 20px}
+  .box{background:#fff;color:#20193B;border-radius:12px;padding:24px}
+  label{display:block;font-size:13px;font-weight:600;margin:12px 0 6px}
+  input[type=email],input[type=password],input[type=text]{width:100%;box-sizing:border-box;border:1px solid #E6E2F2;border-radius:8px;padding:10px 12px;font-size:14px}
+  input:focus{outline:none;border-color:#B87F07}
+  button{width:100%;margin-top:18px;background:#20193B;color:#FFFEF0;border:0;border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer}
+  button:hover{background:#4A4270}
+  a{color:#F3D994}
+  .box a{color:#20193B;font-weight:600}
+  .msg{background:#F3D994;color:#20193B;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:12px}
+  ul.errorlist{color:#b91c1c;font-size:13px;margin:6px 0;padding-left:18px}
+  .foot{text-align:center;margin-top:16px;font-size:13px}
+</style></head>
+<body><div class="card">
+  <div class="brand">Veloma</div>
+  <h1>{{ title|default:"Recuperar acesso" }}</h1>
+  <div class="box">{% block inner %}{% endblock %}</div>
+  <div class="foot"><a href="/admin/login/">Voltar ao acesso</a></div>
+</div></body></html>

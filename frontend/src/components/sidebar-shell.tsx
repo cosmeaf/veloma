@@ -12,7 +12,7 @@ import { site } from '@/content/site';
 import { NAVIGATION_BY_AREA, isActive, type Area } from '@/config/navigation';
 
 /**
- * Sidebar shell used by both areas.
+ * Navy sidebar shell used by both areas.
  *
  * The navigation lives here rather than in the layout because entries carry
  * icon components, and functions cannot cross the server/client boundary. A new
@@ -35,14 +35,13 @@ export function SidebarShell({
   const [open, setOpen] = useState(false);
   const sections = NAVIGATION_BY_AREA[area];
 
-  // Any navigation closes the mobile drawer.
   useEffect(() => setOpen(false), [pathname]);
 
   const nav = (
     <nav className="flex flex-1 flex-col gap-6 overflow-y-auto px-3 py-4">
       {sections.map((section) => (
         <div key={section.title}>
-          <p className="text-navy/40 px-3 pb-2 text-xs font-semibold tracking-wider uppercase">{section.title}</p>
+          <p className="text-gold-high/60 px-3 pb-2 text-xs font-semibold tracking-wider uppercase">{section.title}</p>
           <ul className="space-y-0.5">
             {section.links.map((link) => {
               const active = isActive(pathname, link);
@@ -55,7 +54,9 @@ export function SidebarShell({
                     aria-current={active ? 'page' : undefined}
                     className={cn(
                       'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                      active ? 'bg-navy text-ivory' : 'text-navy/70 hover:bg-mist/50 hover:text-navy',
+                      active
+                        ? 'bg-gold text-navy shadow-sm'
+                        : 'text-ivory/75 hover:bg-white/10 hover:text-ivory',
                     )}
                   >
                     <Icon className="size-4 shrink-0" aria-hidden />
@@ -72,32 +73,34 @@ export function SidebarShell({
 
   return (
     <div className="flex min-h-full flex-1">
-      <aside className="border-mist hidden w-64 shrink-0 flex-col border-r bg-white lg:flex">
-        <div className="border-mist flex h-14 items-center gap-2 border-b px-5">
+      {/* Desktop sidebar — navy with a gold hairline */}
+      <aside className="bg-navy hidden w-64 shrink-0 flex-col border-r border-white/10 lg:flex">
+        <div className="flex h-14 items-center gap-2 border-b border-white/10 px-5">
           <Link href="/" aria-label={site.name}>
-            <VelomaMark />
+            <VelomaMark tone="dark" />
           </Link>
-          <span className="bg-mist/60 text-navy/70 rounded-full px-2 py-0.5 text-xs font-medium">{scope}</span>
+          <span className="bg-white/10 text-gold-high rounded-full px-2 py-0.5 text-xs font-medium">{scope}</span>
         </div>
         {nav}
-        <div className="border-mist border-t px-5 py-3">
-          <p className="text-navy/70 truncate text-sm">{userName}</p>
+        <div className="border-t border-white/10 px-5 py-3">
+          <p className="text-ivory/70 truncate text-sm">{userName}</p>
         </div>
       </aside>
 
+      {/* Mobile drawer */}
       {open ? (
         <div className="fixed inset-0 z-40 lg:hidden">
           <button
             type="button"
             aria-label="Fechar menu"
-            className="bg-navy/40 absolute inset-0"
+            className="bg-navy/60 absolute inset-0"
             onClick={() => setOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 flex w-64 flex-col bg-white shadow-xl">
-            <div className="border-mist flex h-14 items-center justify-between border-b px-5">
-              <VelomaMark />
+          <aside className="bg-navy absolute inset-y-0 left-0 flex w-64 flex-col shadow-xl">
+            <div className="flex h-14 items-center justify-between border-b border-white/10 px-5">
+              <VelomaMark tone="dark" />
               <button type="button" onClick={() => setOpen(false)} aria-label="Fechar menu">
-                <X className="text-navy/55 size-5" />
+                <X className="text-ivory/70 size-5" />
               </button>
             </div>
             {nav}
@@ -106,20 +109,20 @@ export function SidebarShell({
       ) : null}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="border-mist flex h-14 items-center justify-between gap-3 border-b bg-white px-4 sm:px-6">
+        <header className="bg-navy flex h-14 items-center justify-between gap-3 px-4 sm:px-6">
           <button
             type="button"
-            className="text-navy/70 hover:bg-mist/50 rounded-lg p-2 lg:hidden"
+            className="text-ivory/80 rounded-lg p-2 hover:bg-white/10 lg:hidden"
             onClick={() => setOpen(true)}
             aria-label="Abrir menu"
           >
             <Menu className="size-5" />
           </button>
-          <span className="text-navy/55 text-sm lg:hidden">{scope}</span>
+          <span className="text-ivory/70 text-sm lg:hidden">{scope}</span>
           <div className="ml-auto flex items-center gap-3">
             {headerAction}
-            <span className="text-navy/70 hidden text-sm sm:inline">{userName}</span>
-            <LogoutButton />
+            <span className="text-ivory/80 hidden text-sm sm:inline">{userName}</span>
+            <LogoutButton onNavy />
           </div>
         </header>
         {/* Full width: dense tables and the folder explorer need the room. */}

@@ -367,6 +367,17 @@ class FirstAccessService:
         return user
 
 
+def _is_protected_admin(user):
+    """The default administrator can never be deactivated, archived or deleted."""
+    from django.conf import settings
+    protected = (getattr(settings, 'PROTECTED_ADMIN_EMAIL', '') or '').strip().lower()
+    if user is None:
+        return False
+    if protected and user.email.strip().lower() == protected:
+        return True
+    return bool(user.is_superuser)
+
+
 class AccountLifecycleService:
     """Single entry point for deactivation, logical deletion and their reversals.
 
@@ -453,6 +464,8 @@ class AccountLifecycleService:
         from config.authentication.models import SecurityEvent
 
         cls._assert_not_self(user, performed_by)
+        if _is_protected_admin(user):
+            raise ValueError('The default administrator account is protected and cannot be changed.')
         lifecycle = cls.lifecycle_for(user)
         if lifecycle.is_archived:
             raise ValueError('Archived accounts must be restored before being deactivated.')
@@ -492,6 +505,8 @@ class AccountLifecycleService:
         from config.authentication.models import SecurityEvent
 
         cls._assert_not_self(user, performed_by)
+        if _is_protected_admin(user):
+            raise ValueError('The default administrator account is protected and cannot be changed.')
         lifecycle = cls.lifecycle_for(user)
         if lifecycle.is_archived:
             return lifecycle

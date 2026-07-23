@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { AuthShell } from '@/components/auth-shell';
 import { Alert } from '@/components/ui';
-import { VelomaLogomark } from '@/components/brand';
-import { site } from '@/content/site';
 import { AcceptInvitationForm } from '@/features/invitations/accept-form';
 import { BackendError, backendFetch } from '@/lib/api/backend';
 
@@ -42,31 +41,25 @@ export default async function AcceptInvitationPage({
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center px-6 py-16">
-      <div className="w-full max-w-xl">
-        <Link href="/" aria-label={site.name} className="mx-auto block w-fit">
-          <VelomaLogomark width={150} priority />
-        </Link>
-        <h1 className="font-display mt-6 text-center text-2xl font-semibold tracking-tight text-navy">Criar a sua conta</h1>
-        <p className="text-navy/55 mt-1 text-center text-sm">Complete os dados para aceder à área de cliente.</p>
-
-        <div className="mt-6 rounded-xl border border-mist bg-white p-6">
-          {invitation && token ? (
-            <AcceptInvitationForm token={token} email={invitation.email} clientName={invitation.client_name} />
-          ) : (
-            <div className="space-y-4">
-              <Alert>{error}</Alert>
-              <p className="text-sm text-navy/55">
-                Peça um novo convite ao seu contabilista, ou{' '}
-                <Link href="/entrar" className="font-medium text-navy hover:underline">
-                  entre
-                </Link>{' '}
-                se já tem conta.
-              </p>
-            </div>
-          )}
+    <AuthShell
+      title="Criar a sua conta"
+      description="Complete os dados para aceder à área de cliente."
+      width="md"
+    >
+      {invitation && token ? (
+        <AcceptInvitationForm token={token} email={invitation.email} clientName={invitation.client_name} />
+      ) : (
+        <div className="space-y-4">
+          <Alert>{error}</Alert>
+          <p className="text-navy/60 text-sm">
+            Peça um novo convite ao seu contabilista, ou{' '}
+            <Link href="/entrar" className="text-navy font-medium hover:underline">
+              entre
+            </Link>{' '}
+            se já tem conta.
+          </p>
         </div>
-      </div>
-    </main>
+      )}
+    </AuthShell>
   );
 }
