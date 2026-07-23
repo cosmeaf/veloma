@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.admin import ModelAdmin, SimpleListFilter, StackedInline, TabularInline, action, register
+from django.utils import timezone
 
 from config.admin import veloma_admin_site
 
@@ -11,6 +12,7 @@ from .models import (
     Document,
     DocumentVersion,
     LifecycleStatus,
+    DeletedDocument,
     Protocol,
     ProtocolComment,
     ProtocolEvent,
@@ -18,7 +20,7 @@ from .models import (
     ProtocolSubject,
     TermsAcceptance,
 )
-from .services import ClientLifecycleService, DocumentService
+from .services import ClientLifecycleService, DocumentService, FolderService
 
 
 class ReadOnlyInline(TabularInline):
@@ -212,7 +214,11 @@ class DocumentAdmin(ModelAdmin):
         'deletion_reason', 'purge_after', 'purged_at', 'created_at', 'updated_at',
     )
     inlines = (DocumentVersionInline,)
-    actions = ('rescan_documents', 'archive_documents', 'delete_documents', 'restore_documents')
+    actions = ('rescan_documents', 'archive_documents', 'delete_documents')
+
+    def get_queryset(self, request):
+        # Recycled documents live in "Documentos eliminados", not the main list.
+        return super().get_queryset(request).exclude(status=Document.STATUS_DELETED)
 
     def get_actions(self, request):
         actions = super().get_actions(request)
@@ -255,27 +261,34 @@ class DocumentAdmin(ModelAdmin):
                 continue
         self.message_user(
             request,
-            f'{count} documento(s) na reciclagem (restauráveis 30 dias; recuperáveis no Dropbox).',
+            f'{count} documento(s) na reciclagem (restauráveis 30 dias; recuperáveis no Dropbox). '
+            'Ver em "Documentos eliminados".',
         )
 
-    @action(description='Restaurar da reciclagem')
-    def restore_documents(self, request, queryset):
-        count = 0
-        for document in queryset.filter(status=Document.STATUS_DELETED, purged_at__isnull=True):
-            try:
-                DocumentService.restore(document=document, performed_by=request.user, request=request)
-                count += 1
-            except ValueError:
-                continue
-        self.message_user(request, f'{count} documento(s) restaurado(s).')
 
+@register(DeletedDocument, site=veloma_admin_site)
+class DeletedDocumentAdmin(ModelAdmin):
+    """Recycle bin: only deleted documents, with restore and permanent purge."""
 
-@register(ClientFolder, site=veloma_admin_site)
-class ClientFolderAdmin(ModelAdmin):
-    list_display = ('name', 'client', 'folder_type', 'year', 'month', 'archived_at')
-    list_filter = ('folder_type', 'client', 'year')
-    search_fields = ('name', 'client__legal_name')
-    readonly_fields = ('id', 'slug', 'created_by', 'archived_at', 'created_at', 'updated_at')
+    list_display = ('title', 'client', 'deleted_by_name_snapshot', 'deletion_reason', 'deleted_at', 'purge_after')
+    list_filter = ('client', 'deleted_at')
+    search_fields = ('title', 'original_name', 'client__legal_name')
+    date_hierarchy = 'deleted_at'
+    readonly_fields = (
+        'id', 'client', 'protocol', 'title', 'original_name', 'status',
+        'deleted_by', 'deleted_by_name_snapshot', 'deletion_reason',
+        'deleted_at', 'purge_after', 'purged_at',
+    )
+    actions = ('restore_documents', 'purge_documents')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(status=Document.STATUS_DELETED)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
     def get_actions(self, request):
         actions = super().get_actions(request)
@@ -284,6 +297,74 @@ class ClientFolderAdmin(ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    @action(description='Restaurar da reciclagem')
+    def restore_documents(self, request, queryset):
+        count = 0
+        for document in queryset.filter(purged_at__isnull=True):
+            try:
+                DocumentService.restore(document=document, performed_by=request.user, request=request)
+                count += 1
+            except ValueError:
+                continue
+        self.message_user(request, f'{count} documento(s) restaurado(s).')
+
+    @action(description='Remover definitivamente (purgar já)')
+    def purge_documents(self, request, queryset):
+        from config.common.storage import StorageService
+
+        count = 0
+        for document in queryset.filter(purged_at__isnull=True):
+            for version in document.versions.exclude(storage_key=''):
+                StorageService.delete(version.storage_key)
+            document.purged_at = timezone.now()
+            document.save(update_fields=('purged_at', 'updated_at'))
+            count += 1
+        self.message_user(request, f'{count} documento(s) removido(s) definitivamente do armazenamento.')
+
+
+@register(ClientFolder, site=veloma_admin_site)
+class ClientFolderAdmin(ModelAdmin):
+    list_display = ('name', 'client', 'folder_type', 'year', 'month', 'archived_at')
+    list_filter = ('folder_type', 'client', 'year')
+    search_fields = ('name', 'client__legal_name')
+    readonly_fields = ('id', 'slug', 'created_by', 'archived_at', 'created_at', 'updated_at')
+    actions = ('archive_folders', 'delete_empty_folders')
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        actions.pop('delete_selected', None)
+        return actions
+
+    def has_delete_permission(self, request, obj=None):
+        # Only truly empty folders can be hard-deleted (documents PROTECT theirs).
+        if obj is None:
+            return True
+        return not obj.documents.exists()
+
+    @action(description='Arquivar pastas (esconder)')
+    def archive_folders(self, request, queryset):
+        count = 0
+        for folder in queryset.filter(archived_at__isnull=True):
+            FolderService.archive(folder=folder, performed_by=request.user)
+            count += 1
+        self.message_user(request, f'{count} pasta(s) arquivada(s).')
+
+    @action(description='Eliminar pastas vazias')
+    def delete_empty_folders(self, request, queryset):
+        deleted = 0
+        skipped = 0
+        for folder in queryset:
+            if folder.documents.exists() or folder.children.exists():
+                skipped += 1
+                continue
+            folder.delete()
+            deleted += 1
+        self.message_user(
+            request,
+            f'{deleted} pasta(s) vazia(s) eliminada(s).'
+            + (f' {skipped} ignorada(s) por conterem documentos ou subpastas.' if skipped else ''),
+        )
 
 
 @register(ProtocolSubject, site=veloma_admin_site)

@@ -940,6 +940,15 @@ class TermsAcceptance(models.Model):
         return f'{self.email_snapshot} · {self.accepted_at:%Y-%m-%d}'
 
 
+class DeletedDocument(Document):
+    """Admin-only proxy listing recycled documents separately from the main list."""
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Documento eliminado'
+        verbose_name_plural = 'Documentos eliminados'
+
+
 class ProtocolSubject(models.Model):
     """Catalogue of request subjects a client can pick when opening a protocol.
 

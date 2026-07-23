@@ -208,7 +208,8 @@ class ClientService:
         client = Client(**data)
         client.full_clean()
         client.save()
-        FolderService.ensure_base_structure(client=client, created_by=performed_by)
+        # Folders are defined by staff, not seeded statically. Protocol/competence
+        # folders are still created on demand when documents are filed.
         PortalAudit.record(
             event_type='client_created',
             actor=performed_by,
