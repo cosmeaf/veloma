@@ -1,0 +1,142 @@
+from django.urls import path
+
+from .models import Protocol
+from .views import (
+    ClientDetailView,
+    ClientLifecycleActionView,
+    ClientListCreateView,
+    ClientMemberActionView,
+    ClientMemberDetailView,
+    ClientMemberListView,
+    CommentArchiveView,
+    CommentDetailView,
+    CommentListCreateView,
+    DashboardView,
+    DocumentArchiveView,
+    DocumentDetailView,
+    DocumentDownloadView,
+    DocumentListView,
+    DocumentMoveView,
+    DocumentNewVersionView,
+    DocumentRejectView,
+    DocumentUploadView,
+    DocumentVersionListView,
+    FolderArchiveView,
+    FolderDetailView,
+    FolderListCreateView,
+    FolderMoveView,
+    InvitationAcceptView,
+    InvitationDetailView,
+    InvitationListCreateView,
+    InvitationResendView,
+    InvitationRevokeView,
+    InvitationValidateView,
+    ProtocolAssignView,
+    ProtocolDetailView,
+    ProtocolListCreateView,
+    ProtocolTimelineView,
+    ProtocolTransitionView,
+    RequirementDetailView,
+    RequirementListCreateView,
+)
+
+app_name = 'client_portal'
+
+urlpatterns = [
+    path('dashboard/', DashboardView.as_view(), name='dashboard'),
+
+    path('invitations/', InvitationListCreateView.as_view(), name='invitation-list'),
+    path('invitations/validate/', InvitationValidateView.as_view(), name='invitation-validate'),
+    path('invitations/accept/', InvitationAcceptView.as_view(), name='invitation-accept'),
+    path('invitations/<uuid:invitation_id>/', InvitationDetailView.as_view(), name='invitation-detail'),
+    path('invitations/<uuid:invitation_id>/resend/', InvitationResendView.as_view(), name='invitation-resend'),
+    path('invitations/<uuid:invitation_id>/revoke/', InvitationRevokeView.as_view(), name='invitation-revoke'),
+
+    path('clients/', ClientListCreateView.as_view(), name='client-list'),
+    path('clients/<uuid:client_id>/', ClientDetailView.as_view(), name='client-detail'),
+    path(
+        'clients/<uuid:client_id>/deactivate/',
+        ClientLifecycleActionView.as_view(operation='deactivate'),
+        name='client-deactivate',
+    ),
+    path(
+        'clients/<uuid:client_id>/archive/',
+        ClientLifecycleActionView.as_view(operation='archive'),
+        name='client-archive',
+    ),
+    path(
+        'clients/<uuid:client_id>/restore/',
+        ClientLifecycleActionView.as_view(operation='restore'),
+        name='client-restore',
+    ),
+    path(
+        'clients/<uuid:client_id>/reactivate/',
+        ClientLifecycleActionView.as_view(operation='reactivate'),
+        name='client-reactivate',
+    ),
+    path('clients/<uuid:client_id>/members/', ClientMemberListView.as_view(), name='client-members'),
+
+    path('members/<uuid:member_id>/', ClientMemberDetailView.as_view(), name='member-detail'),
+    path(
+        'members/<uuid:member_id>/deactivate/',
+        ClientMemberActionView.as_view(operation='deactivate'),
+        name='member-deactivate',
+    ),
+    path(
+        'members/<uuid:member_id>/archive/',
+        ClientMemberActionView.as_view(operation='archive'),
+        name='member-archive',
+    ),
+    path(
+        'members/<uuid:member_id>/restore/',
+        ClientMemberActionView.as_view(operation='restore'),
+        name='member-restore',
+    ),
+
+    path('protocols/', ProtocolListCreateView.as_view(), name='protocol-list'),
+    path('protocols/<uuid:protocol_id>/', ProtocolDetailView.as_view(), name='protocol-detail'),
+    path('protocols/<uuid:protocol_id>/transition/', ProtocolTransitionView.as_view(), name='protocol-transition'),
+    path('protocols/<uuid:protocol_id>/assign/', ProtocolAssignView.as_view(), name='protocol-assign'),
+    path(
+        'protocols/<uuid:protocol_id>/complete/',
+        ProtocolTransitionView.as_view(target_status=Protocol.STATUS_COMPLETED),
+        name='protocol-complete',
+    ),
+    path(
+        'protocols/<uuid:protocol_id>/reopen/',
+        ProtocolTransitionView.as_view(target_status=Protocol.STATUS_UNDER_REVIEW),
+        name='protocol-reopen',
+    ),
+    path(
+        'protocols/<uuid:protocol_id>/archive/',
+        ProtocolTransitionView.as_view(target_status=Protocol.STATUS_ARCHIVED),
+        name='protocol-archive',
+    ),
+    path('protocols/<uuid:protocol_id>/timeline/', ProtocolTimelineView.as_view(), name='protocol-timeline'),
+    path(
+        'protocols/<uuid:protocol_id>/requirements/',
+        RequirementListCreateView.as_view(),
+        name='protocol-requirements',
+    ),
+    path('protocols/<uuid:protocol_id>/comments/', CommentListCreateView.as_view(), name='protocol-comments'),
+
+    path('requirements/<uuid:requirement_id>/', RequirementDetailView.as_view(), name='requirement-detail'),
+
+    path('comments/<uuid:comment_id>/', CommentDetailView.as_view(), name='comment-detail'),
+    path('comments/<uuid:comment_id>/archive/', CommentArchiveView.as_view(), name='comment-archive'),
+
+    path('folders/', FolderListCreateView.as_view(), name='folder-list'),
+    path('folders/<uuid:folder_id>/', FolderDetailView.as_view(), name='folder-detail'),
+    path('folders/<uuid:folder_id>/move/', FolderMoveView.as_view(), name='folder-move'),
+    path('folders/<uuid:folder_id>/archive/', FolderArchiveView.as_view(), name='folder-archive'),
+
+    path('documents/', DocumentListView.as_view(), name='document-list'),
+    path('documents/upload/', DocumentUploadView.as_view(), name='document-upload'),
+    path('documents/<uuid:document_id>/', DocumentDetailView.as_view(), name='document-detail'),
+    path('documents/<uuid:document_id>/new-version/', DocumentNewVersionView.as_view(), name='document-new-version'),
+    path('documents/<uuid:document_id>/versions/', DocumentVersionListView.as_view(), name='document-versions'),
+    path('documents/<uuid:document_id>/move/', DocumentMoveView.as_view(), name='document-move'),
+    path('documents/<uuid:document_id>/reject/', DocumentRejectView.as_view(), name='document-reject'),
+    path('documents/<uuid:document_id>/archive/', DocumentArchiveView.as_view(), name='document-archive'),
+    path('documents/<uuid:document_id>/download/', DocumentDownloadView.as_view(), name='document-download'),
+]

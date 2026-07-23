@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-PT">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Token expirado</title></head>
+<body style="margin:0;background:#f4f4f5;font-family:Arial,sans-serif;color:#18181b">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:32px 16px"><tr><td align="center">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#fff;border:1px solid #e4e4e7;border-radius:12px;padding:32px">
+<tr><td><div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#52525b">Veloma</div>
+<h1 style="font-size:24px;margin:18px 0 12px">Token expirado</h1>
+<p style="font-size:16px;line-height:1.6">Olá {% if user.first_name %}{{ user.first_name }}{% else %}utilizador{% endif %},</p>
+<p style="font-size:16px;line-height:1.6">{{ message|default:"Esta é uma notificação automática relacionada com a segurança da sua conta." }}</p>
+{% if otp %}<div style="font-size:32px;letter-spacing:.2em;font-weight:700;text-align:center;padding:20px;background:#f4f4f5;border-radius:10px;margin:24px 0">{{ otp }}</div>{% endif %}
+
+{% if ip_address or device or country_code or event_time %}
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:20px 0;background:#fafafa;border:1px solid #e4e4e7;border-radius:8px;padding:14px">
+{% if event_time %}<tr><td style="padding:4px 0;color:#71717a">Data</td><td style="padding:4px 0;text-align:right">{{ event_time }}</td></tr>{% endif %}
+{% if ip_address %}<tr><td style="padding:4px 0;color:#71717a">IP</td><td style="padding:4px 0;text-align:right">{{ ip_address }}</td></tr>{% endif %}
+{% if country_code %}<tr><td style="padding:4px 0;color:#71717a">País</td><td style="padding:4px 0;text-align:right">{{ country_code }}</td></tr>{% endif %}
+{% if device %}<tr><td style="padding:4px 0;color:#71717a">Dispositivo</td><td style="padding:4px 0;text-align:right">{{ device }}</td></tr>{% endif %}
+</table>
+{% endif %}
+{% if action_url %}<p style="margin:28px 0"><a href="{{ action_url }}" style="display:inline-block;padding:12px 18px;background:#18181b;color:#fff;text-decoration:none;border-radius:8px">Continuar</a></p>{% endif %}
+<p style="font-size:13px;line-height:1.5;color:#71717a;margin-top:28px">Se não reconhece esta ação, contacte imediatamente a administração.</p>
+</td></tr></table></td></tr></table></body></html>

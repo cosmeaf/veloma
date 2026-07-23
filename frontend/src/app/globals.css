@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/**
+ * Veloma design tokens, from the brand manual.
+ *
+ * Gold base (#D69508) is reserved for surfaces and large marks; thin text and
+ * rules on light backgrounds use "ouro sol" (#B87F07). Navy is the primary
+ * interface colour so gold stays an accent.
+ */
+@theme {
+  --font-sans: var(--font-jost), ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-display: var(--font-cinzel), Georgia, serif;
+
+  --color-gold: #d69508;
+  --color-gold-high: #f3d994;
+  --color-gold-read: #e8b54a;
+  --color-gold-sun: #b87f07;
+  --color-gold-deep: #8a5d0a;
+
+  --color-navy: #20193b;
+  --color-navy-soft: #4a4270;
+  --color-graphite: #101018;
+  --color-ivory: #fffef0;
+  --color-lilac: #b9b3d0;
+  --color-mist: #e6e2f2;
+}
+
+html {
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: var(--color-gold-high);
+  color: var(--color-navy);
+}

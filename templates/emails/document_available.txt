@@ -1,0 +1,20 @@
+Veloma
+
+Documento disponível
+
+Olá{% if user.first_name %} {{ user.first_name }}{% endif %},
+
+{{ message|default:"Está disponível um novo documento na sua área de cliente." }}
+
+{% if client.legal_name %}Empresa: {{ client.legal_name }}{% endif %}
+{% if protocol.number %}Protocolo: {{ protocol.number }}{% endif %}
+{% if protocol.title %}Assunto: {{ protocol.title }}{% endif %}
+{% if protocol.status %}Estado: {{ protocol.status }}{% endif %}
+{% if protocol.due_date %}Prazo: {{ protocol.due_date }}{% endif %}
+{% if document.title %}Documento: {{ document.title }}{% endif %}
+{% if invitation.expires_at %}Válido até: {{ invitation.expires_at }}{% endif %}
+{% if event_time %}Data: {{ event_time }}{% endif %}
+
+{% if action_url %}Continuar: {{ action_url }}{% endif %}
+
+Se não reconhece esta ação, contacte imediatamente a administração.

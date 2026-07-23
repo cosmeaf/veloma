@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt-PT">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nova mensagem do cliente</title></head>
+<body style="margin:0;background:#f4f4f5;font-family:Arial,sans-serif;color:#18181b">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:32px 16px"><tr><td align="center">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#fff;border:1px solid #e4e4e7;border-radius:12px;padding:32px">
+<tr><td><div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#52525b">Veloma</div>
+<h1 style="font-size:24px;margin:18px 0 12px">Nova mensagem do cliente</h1>
+<p style="font-size:16px;line-height:1.6">Olá{% if user.first_name %} {{ user.first_name }}{% endif %},</p>
+<p style="font-size:16px;line-height:1.6">{{ message|default:"O cliente enviou uma mensagem no protocolo." }}</p>
+
+{% if client.legal_name or protocol.number or document.title or invitation.expires_at %}
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:20px 0;background:#fafafa;border:1px solid #e4e4e7;border-radius:8px;padding:14px">
+{% if client.legal_name %}<tr><td style="padding:4px 0;color:#71717a">Empresa</td><td style="padding:4px 0;text-align:right">{{ client.legal_name }}</td></tr>{% endif %}
+{% if protocol.number %}<tr><td style="padding:4px 0;color:#71717a">Protocolo</td><td style="padding:4px 0;text-align:right">{{ protocol.number }}</td></tr>{% endif %}
+{% if protocol.title %}<tr><td style="padding:4px 0;color:#71717a">Assunto</td><td style="padding:4px 0;text-align:right">{{ protocol.title }}</td></tr>{% endif %}
+{% if protocol.status %}<tr><td style="padding:4px 0;color:#71717a">Estado</td><td style="padding:4px 0;text-align:right">{{ protocol.status }}</td></tr>{% endif %}
+{% if protocol.due_date %}<tr><td style="padding:4px 0;color:#71717a">Prazo</td><td style="padding:4px 0;text-align:right">{{ protocol.due_date }}</td></tr>{% endif %}
+{% if document.title %}<tr><td style="padding:4px 0;color:#71717a">Documento</td><td style="padding:4px 0;text-align:right">{{ document.title }}</td></tr>{% endif %}
+{% if invitation.expires_at %}<tr><td style="padding:4px 0;color:#71717a">Válido até</td><td style="padding:4px 0;text-align:right">{{ invitation.expires_at }}</td></tr>{% endif %}
+{% if event_time %}<tr><td style="padding:4px 0;color:#71717a">Data</td><td style="padding:4px 0;text-align:right">{{ event_time }}</td></tr>{% endif %}
+</table>
+{% endif %}
+{% if action_url %}<p style="margin:28px 0"><a href="{{ action_url }}" style="display:inline-block;padding:12px 18px;background:#18181b;color:#fff;text-decoration:none;border-radius:8px">Continuar</a></p>{% endif %}
+<p style="font-size:13px;line-height:1.5;color:#71717a;margin-top:28px">Se não reconhece esta ação, contacte imediatamente a administração.</p>
+</td></tr></table></td></tr></table></body></html>

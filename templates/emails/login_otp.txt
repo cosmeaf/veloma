@@ -1,0 +1,18 @@
+Veloma
+
+Confirme o seu acesso
+
+Olá {% if user.first_name %}{{ user.first_name }}{% else %}utilizador{% endif %},
+
+{{ message|default:"Esta é uma notificação automática relacionada com a segurança da sua conta." }}
+
+{% if otp %}Código: {{ otp }}{% endif %}
+
+{% if event_time %}Data: {{ event_time }}{% endif %}
+{% if ip_address %}IP: {{ ip_address }}{% endif %}
+{% if country_code %}País: {{ country_code }}{% endif %}
+{% if device %}Dispositivo: {{ device }}{% endif %}
+
+{% if action_url %}Continuar: {{ action_url }}{% endif %}
+
+Se não reconhece esta ação, contacte imediatamente a administração.
