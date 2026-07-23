@@ -398,6 +398,12 @@ class DropboxSettings(SingletonModel):
     # team_member_id is blank, the authenticated team admin is used automatically.
     is_team = models.BooleanField(default=False, help_text='Dropbox Business (team) app.')
     team_member_id = models.CharField(max_length=128, blank=True, help_text='Optional; defaults to the team admin.')
+    # Team-folder namespace to root all paths at, so files land in a SHARED team
+    # folder (visible to everyone) instead of the acting member's private space.
+    # Blank = write in the member's own space.
+    path_root_namespace_id = models.CharField(
+        max_length=64, blank=True, help_text='Team-folder namespace id for shared storage. Blank = member space.'
+    )
 
     mirror_uploads = models.BooleanField(default=True)
     uploads_path = models.CharField(max_length=255, default='/Apps/veloma_upload')

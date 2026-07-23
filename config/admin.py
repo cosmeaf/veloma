@@ -617,9 +617,10 @@ class DropboxSettingsAdmin(SingletonAdmin):
             'fields': ('enabled', 'app_key', 'app_secret', 'refresh_token', 'timeout_seconds'),
         }),
         ('Equipa (Dropbox Business)', {
-            'description': 'Se a conta for Business, ative e opcionalmente indique o membro; '
-            'por omissão usa o administrador da equipa.',
-            'fields': ('is_team', 'team_member_id'),
+            'description': 'Se a conta for Business, ative e opcionalmente indique o membro '
+            '(por omissão o administrador). Para guardar numa pasta partilhada da equipa, '
+            'indique o namespace do team folder.',
+            'fields': ('is_team', 'team_member_id', 'path_root_namespace_id'),
         }),
         ('Uploads aprovados', {
             'fields': ('mirror_uploads', 'uploads_path'),

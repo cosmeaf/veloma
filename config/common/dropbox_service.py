@@ -72,8 +72,13 @@ class DropboxService:
             member_id = settings.team_member_id
             if not member_id:
                 member_id = team.team_token_get_authenticated_admin().admin_profile.team_member_id
-            return team.as_user(member_id)
-        return dropbox.Dropbox(**common)
+            client = team.as_user(member_id)
+        else:
+            client = dropbox.Dropbox(**common)
+        # Root paths at a shared team folder so files are visible to the whole team.
+        if settings.path_root_namespace_id:
+            client = client.with_path_root(dropbox.common.PathRoot.namespace_id(settings.path_root_namespace_id))
+        return client
 
     @classmethod
     def upload_bytes(cls, *, purpose, relative_path, content):
