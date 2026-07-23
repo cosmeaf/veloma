@@ -82,14 +82,26 @@ export function AcceptInvitationForm({
       <div className="space-y-2">
         <label className="flex items-start gap-2 text-sm text-navy/80">
           <input type="checkbox" {...form.register('accept_terms')} className="mt-0.5" />
-          <span>Aceito os termos e condições.</span>
+          <span>
+            Aceito os{' '}
+            <a href="/termos" target="_blank" rel="noreferrer noopener" className="font-medium text-navy underline">
+              Termos e Condições
+            </a>
+            .
+          </span>
         </label>
         {form.formState.errors.accept_terms ? (
           <p className="text-xs font-medium text-red-600">{form.formState.errors.accept_terms.message}</p>
         ) : null}
         <label className="flex items-start gap-2 text-sm text-navy/80">
           <input type="checkbox" {...form.register('accept_privacy_policy')} className="mt-0.5" />
-          <span>Aceito a política de privacidade.</span>
+          <span>
+            Aceito a{' '}
+            <a href="/privacidade" target="_blank" rel="noreferrer noopener" className="font-medium text-navy underline">
+              Política de Privacidade
+            </a>
+            .
+          </span>
         </label>
         {form.formState.errors.accept_privacy_policy ? (
           <p className="text-xs font-medium text-red-600">{form.formState.errors.accept_privacy_policy.message}</p>

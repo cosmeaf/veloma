@@ -150,6 +150,18 @@ if MINIO_ENABLED:
     AWS_S3_USE_SSL = env_bool('MINIO_USE_SSL', False)
     AWS_S3_VERIFY = env_bool('MINIO_VERIFY_SSL', False)
 
+# Dropbox mirror (infrastructure config, never in the DB). Off by default so the
+# app runs without credentials. A Full-Dropbox-scoped app is needed to write both
+# base paths; alternatively point each path at a separate App-folder app root.
+DROPBOX_ENABLED = env_bool('DROPBOX_ENABLED', False)
+DROPBOX_APP_KEY = env('DROPBOX_APP_KEY', '')
+DROPBOX_APP_SECRET = env('DROPBOX_APP_SECRET', '')
+DROPBOX_REFRESH_TOKEN = env('DROPBOX_REFRESH_TOKEN', '')
+# Approved document uploads mirror here; RGPD consent proofs (10-year archive) here.
+DROPBOX_UPLOADS_PATH = env('DROPBOX_UPLOADS_PATH', '/veloma_upload')
+DROPBOX_RGPD_PATH = env('DROPBOX_RGPD_PATH', '/rgpd')
+DROPBOX_TIMEOUT_SECONDS = env_int('DROPBOX_TIMEOUT_SECONDS', 30)
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ('config.authentication.jwt.SessionJWTAuthentication',),
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),

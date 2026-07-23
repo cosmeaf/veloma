@@ -846,3 +846,68 @@ class ClientPortalActivity(models.Model):
 
     def __str__(self):
         return f'{self.event_type} · {self.summary}'
+
+
+class TermsAcceptance(models.Model):
+    """Legal proof that a user accepted the Terms and Privacy Policy.
+
+    Captured at first access (invitation acceptance) with the digital evidence
+    required by the RGPD accountability principle: IP, region, device, user
+    agent, timestamp and the accepted document versions. A sealed PDF is stored
+    in object storage and mirrored to the company's 10-year RGPD archive.
+
+    Never deleted: this row and its PDF are the retention evidence, so the
+    cleanup task and admin deletion must leave them untouched.
+    """
+
+    CONTEXT_INVITATION = 'invitation'
+    CONTEXT_FIRST_ACCESS = 'first_access'
+    CONTEXT_CHOICES = (
+        (CONTEXT_INVITATION, 'Invitation acceptance'),
+        (CONTEXT_FIRST_ACCESS, 'First access'),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='veloma_terms_acceptances',
+    )
+    # Snapshots survive user anonymisation / client archival.
+    email_snapshot = models.EmailField(blank=True)
+    client = models.ForeignKey(
+        Client,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='terms_acceptances',
+    )
+    client_name_snapshot = models.CharField(max_length=255, blank=True)
+    context = models.CharField(max_length=32, choices=CONTEXT_CHOICES, default=CONTEXT_INVITATION)
+
+    terms_version = models.CharField(max_length=32)
+    privacy_version = models.CharField(max_length=32)
+
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    country_code = models.CharField(max_length=8, blank=True)
+    region = models.CharField(max_length=128, blank=True)
+    device = models.CharField(max_length=255, blank=True)
+    user_agent = models.TextField(blank=True)
+
+    # PDF proof: key in object storage plus the mirror path in the RGPD archive.
+    pdf_storage_key = models.CharField(max_length=512, blank=True)
+    archived_path = models.CharField(max_length=512, blank=True)
+    archived_at = models.DateTimeField(blank=True, null=True)
+
+    accepted_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        db_table = 'client_portal_terms_acceptance'
+        ordering = ('-accepted_at',)
+        verbose_name = 'Terms acceptance'
+        verbose_name_plural = 'Terms acceptances'
+
+    def __str__(self):
+        return f'{self.email_snapshot} · {self.accepted_at:%Y-%m-%d}'

@@ -9,6 +9,7 @@ from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from config.common.models import DocumentSettings, EmailTemplate, SecuritySettings
+from config.common.storage import StorageService
 
 from .models import (
     Client,
@@ -162,6 +163,38 @@ class InvitationTests(ClientPortalTestCase):
         self.assertTrue(ClientMember.objects.filter(user=user, client=self.client_record).exists())
         invitation.refresh_from_db()
         self.assertEqual(invitation.status, ClientInvitation.STATUS_ACCEPTED)
+
+    def test_accept_records_terms_acceptance_proof(self):
+        from .legal import PRIVACY_VERSION, TERMS_VERSION
+        from .models import TermsAcceptance
+
+        _invitation, token = InvitationService.create(
+            client=self.client_record,
+            email='prova@example.com',
+            role=ClientMember.ROLE_OWNER,
+            invited_by=self.staff,
+        )
+        accept = self.client.post('/api/client-portal/invitations/accept/', {
+            'token': token,
+            'first_name': 'Prova',
+            'last_name': 'Legal',
+            'password': PASSWORD,
+            'password2': PASSWORD,
+            'accept_terms': True,
+            'accept_privacy_policy': True,
+        }, format='json')
+        self.assertEqual(accept.status_code, 201, accept.data)
+
+        user = User.objects.get(username='prova@example.com')
+        record = TermsAcceptance.objects.get(user=user)
+        self.assertEqual(record.context, TermsAcceptance.CONTEXT_INVITATION)
+        self.assertEqual(record.terms_version, TERMS_VERSION)
+        self.assertEqual(record.privacy_version, PRIVACY_VERSION)
+        self.assertEqual(record.client_id, self.client_record.id)
+        self.assertEqual(record.email_snapshot, 'prova@example.com')
+        # A sealed PDF proof is stored and its key recorded.
+        self.assertTrue(record.pdf_storage_key)
+        self.assertTrue(StorageService.exists(record.pdf_storage_key))
 
     def test_invitation_cannot_be_accepted_twice(self):
         _invitation, token = InvitationService.create(

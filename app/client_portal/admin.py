@@ -15,6 +15,7 @@ from .models import (
     ProtocolComment,
     ProtocolEvent,
     ProtocolRequirement,
+    TermsAcceptance,
 )
 from .services import ClientLifecycleService, DocumentService
 
@@ -245,6 +246,35 @@ class ClientFolderAdmin(ModelAdmin):
     list_filter = ('folder_type', 'client', 'year')
     search_fields = ('name', 'client__legal_name')
     readonly_fields = ('id', 'slug', 'created_by', 'archived_at', 'created_at', 'updated_at')
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        actions.pop('delete_selected', None)
+        return actions
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@register(TermsAcceptance, site=veloma_admin_site)
+class TermsAcceptanceAdmin(ModelAdmin):
+    """Legal consent evidence — read-only, never deletable (10-year retention)."""
+
+    list_display = ('email_snapshot', 'client_name_snapshot', 'context', 'country_code', 'accepted_at', 'archived_at')
+    list_filter = ('context', 'terms_version', 'accepted_at')
+    search_fields = ('email_snapshot', 'client_name_snapshot', 'ip_address')
+    date_hierarchy = 'accepted_at'
+    readonly_fields = (
+        'id', 'user', 'email_snapshot', 'client', 'client_name_snapshot', 'context',
+        'terms_version', 'privacy_version', 'ip_address', 'country_code', 'region',
+        'device', 'user_agent', 'pdf_storage_key', 'archived_path', 'archived_at', 'accepted_at',
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
     def get_actions(self, request):
         actions = super().get_actions(request)

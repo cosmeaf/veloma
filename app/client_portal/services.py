@@ -37,6 +37,7 @@ from .models import (
     ProtocolComment,
     ProtocolEvent,
     ProtocolRequirement,
+    TermsAcceptance,
 )
 
 logger = logging.getLogger('app.client_portal.services')
@@ -57,6 +58,88 @@ def safe_filename(name):
     base = base.replace('\\', '/').split('/')[-1].strip()
     base = SAFE_NAME.sub('_', base).strip('._-')
     return base[:200] or 'file'
+
+
+class TermsAcceptanceService:
+    """Records the legal proof of consent and generates its PDF.
+
+    Called at first access (invitation acceptance). Captures the digital
+    evidence, stores a sealed PDF in object storage and queues its mirror to the
+    company's 10-year RGPD archive on Dropbox. A mirror or PDF failure must never
+    break account activation, so both are best-effort here.
+    """
+
+    @staticmethod
+    def record(*, user, client=None, context=TermsAcceptance.CONTEXT_INVITATION, request=None,
+               first_name='', last_name=''):
+        from .legal import PRIVACY_VERSION, TERMS_VERSION, build_acceptance_pdf
+
+        acceptance = TermsAcceptance.objects.create(
+            user=user,
+            email_snapshot=(getattr(user, 'email', '') or '').strip().lower(),
+            client=client,
+            client_name_snapshot=getattr(client, 'legal_name', '') or '',
+            context=context,
+            terms_version=TERMS_VERSION,
+            privacy_version=PRIVACY_VERSION,
+            ip_address=RequestContext.ip(request),
+            country_code=SecurityService.country_code(request),
+            region=TermsAcceptanceService._region(request),
+            device=RequestContext.device(request),
+            user_agent=RequestContext.user_agent(request),
+        )
+
+        try:
+            pdf_bytes = build_acceptance_pdf(acceptance=acceptance, first_name=first_name, last_name=last_name)
+            key = f'rgpd/acceptances/{acceptance.id}.pdf'
+            from django.core.files.base import ContentFile
+
+            StorageService.upload(key=key, content=ContentFile(pdf_bytes))
+            acceptance.pdf_storage_key = key
+            acceptance.save(update_fields=('pdf_storage_key',))
+        except Exception:  # noqa: BLE001 — proof PDF must not block activation.
+            logger.exception('Unable to build the acceptance PDF. acceptance_id=%s', acceptance.id)
+            return acceptance
+
+        try:
+            from .tasks import mirror_terms_acceptance_to_dropbox
+
+            mirror_terms_acceptance_to_dropbox.delay(str(acceptance.id))
+        except Exception:  # noqa: BLE001 — queue best-effort; a sync fallback runs below.
+            logger.exception('Unable to queue the RGPD Dropbox mirror. acceptance_id=%s', acceptance.id)
+            TermsAcceptanceService.mirror_to_archive(acceptance)
+        return acceptance
+
+    @staticmethod
+    def _region(request):
+        data = getattr(request, 'ip_intel', {}) or {}
+        for key in ('region_name', 'regionName', 'region', 'city'):
+            value = data.get(key)
+            if value:
+                return str(value)[:128]
+        return ''
+
+    @staticmethod
+    def mirror_to_archive(acceptance):
+        """Uploads the proof PDF to the RGPD Dropbox archive. Idempotent."""
+        from config.common.dropbox_service import DropboxService
+
+        if not acceptance.pdf_storage_key:
+            return None
+        with StorageService.open(acceptance.pdf_storage_key) as handle:
+            content = handle.read()
+        stamp = acceptance.accepted_at.strftime('%Y/%m') if acceptance.accepted_at else 'undated'
+        relative = f'{stamp}/{acceptance.id}.pdf'
+        path = DropboxService.upload_bytes(
+            purpose=DropboxService.PURPOSE_RGPD,
+            relative_path=relative,
+            content=content,
+        )
+        if path:
+            acceptance.archived_path = path
+            acceptance.archived_at = timezone.now()
+            acceptance.save(update_fields=('archived_path', 'archived_at'))
+        return path
 
 
 class PortalAudit:
@@ -557,6 +640,18 @@ class InvitationService:
             metadata={'invitation_id': str(invitation.id), 'member_id': str(member.id)},
             request=request,
         )
+        # Legal proof of consent — the serializer already enforces both checkboxes.
+        try:
+            TermsAcceptanceService.record(
+                user=user,
+                client=invitation.client,
+                context=TermsAcceptance.CONTEXT_INVITATION,
+                request=request,
+                first_name=user.first_name,
+                last_name=user.last_name,
+            )
+        except Exception:  # noqa: BLE001 — never block account activation on the proof.
+            logger.exception('Unable to record the terms acceptance. user=%s', email)
         NotificationService.send(
             purpose='client_invitation_accepted',
             recipients=[email],
@@ -1151,6 +1246,14 @@ class DocumentService:
                 new_value=document.status,
                 metadata={'document_id': str(document.id), 'scan_status': version.scan_status},
             )
+        # Mirror only approved files to the company Dropbox (never infected/quarantined).
+        if document.status == Document.STATUS_AVAILABLE:
+            try:
+                from .tasks import mirror_document_version_to_dropbox
+
+                transaction.on_commit(lambda: mirror_document_version_to_dropbox.delay(str(version.id)))
+            except Exception:  # noqa: BLE001 — mirroring must not affect the scan result.
+                logger.exception('Unable to queue the Dropbox mirror. version_id=%s', version.id)
         if document.status == Document.STATUS_AVAILABLE and document.visibility != Document.VISIBILITY_STAFF_ONLY:
             emails = list(
                 document.client.members.filter(status=LifecycleStatus.ACTIVE).values_list('user__email', flat=True)

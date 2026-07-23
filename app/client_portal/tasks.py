@@ -26,6 +26,79 @@ def scan_document_version(self, version_id):
     return {'version_id': str(version.id), 'scan_status': version.scan_status}
 
 
+@shared_task(bind=True, max_retries=5)
+def mirror_document_version_to_dropbox(self, version_id):
+    """Copies an approved document version to the company Dropbox uploads area."""
+    from config.common.dropbox_service import DropboxService
+    from config.common.storage import StorageService
+    from .models import Document, DocumentVersion
+
+    if not DropboxService.is_enabled():
+        return {'skipped': 'dropbox_disabled'}
+    version = DocumentVersion.objects.select_related('document', 'document__client', 'document__protocol').filter(
+        pk=version_id
+    ).first()
+    if not version:
+        return {'skipped': 'version_not_found'}
+    # Only mirror files that passed the scan and are available.
+    if version.document.status != Document.STATUS_AVAILABLE:
+        return {'skipped': 'not_available'}
+    try:
+        with StorageService.open(version.storage_key) as handle:
+            content = handle.read()
+        document = version.document
+        client_part = _slug(getattr(document.client, 'legal_name', '') or str(document.client_id))
+        protocol = document.protocol
+        protocol_part = _slug(getattr(protocol, 'number', '') or 'sem-protocolo') if protocol else 'sem-protocolo'
+        name = version.original_name or f'{version.id}'
+        relative = f'{client_part}/{protocol_part}/{document.id}/v{version.version_number}_{_slug(name)}'
+        path = DropboxService.upload_bytes(
+            purpose=DropboxService.PURPOSE_UPLOADS,
+            relative_path=relative,
+            content=content,
+        )
+        if not path:
+            raise RuntimeError('dropbox_upload_returned_none')
+    except Exception as exc:  # noqa: BLE001
+        logger.exception('Dropbox mirror failed. version_id=%s', version_id)
+        raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
+    return {'version_id': str(version.id), 'dropbox_path': path}
+
+
+@shared_task(bind=True, max_retries=5)
+def mirror_terms_acceptance_to_dropbox(self, acceptance_id):
+    """Copies a consent proof PDF to the RGPD Dropbox archive (10-year retention)."""
+    from config.common.dropbox_service import DropboxService
+    from .models import TermsAcceptance
+    from .services import TermsAcceptanceService
+
+    if not DropboxService.is_enabled():
+        return {'skipped': 'dropbox_disabled'}
+    acceptance = TermsAcceptance.objects.filter(pk=acceptance_id).first()
+    if not acceptance:
+        return {'skipped': 'acceptance_not_found'}
+    if acceptance.archived_path:
+        return {'skipped': 'already_archived'}
+    try:
+        path = TermsAcceptanceService.mirror_to_archive(acceptance)
+        if not path:
+            raise RuntimeError('dropbox_upload_returned_none')
+    except Exception as exc:  # noqa: BLE001
+        logger.exception('RGPD Dropbox mirror failed. acceptance_id=%s', acceptance_id)
+        raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
+    return {'acceptance_id': str(acceptance.id), 'dropbox_path': path}
+
+
+def _slug(value):
+    """Filesystem-safe path segment for Dropbox."""
+    import re
+    import unicodedata
+
+    base = unicodedata.normalize('NFKD', str(value or '')).encode('ascii', 'ignore').decode('ascii')
+    base = re.sub(r'[^A-Za-z0-9._-]+', '-', base).strip('-._')
+    return base[:120] or 'item'
+
+
 @shared_task
 def expire_invitations():
     """Marks pending invitations past their expiration date."""
