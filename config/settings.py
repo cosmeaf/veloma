@@ -271,12 +271,24 @@ if not DEBUG:
 DATA_UPLOAD_MAX_MEMORY_SIZE = env_int('DATA_UPLOAD_MAX_MEMORY_SIZE', 10 * 1024 * 1024)
 FILE_UPLOAD_MAX_MEMORY_SIZE = env_int('FILE_UPLOAD_MAX_MEMORY_SIZE', 10 * 1024 * 1024)
 
+LOG_LEVEL = env('DJANGO_LOG_LEVEL', 'INFO')
+
+# Every module uses logging.getLogger(__name__), so its name is its dotted path
+# (e.g. app.client_portal.services). Each top-level package gets a named logger
+# so the source app is always visible in the line.
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{asctime} {levelname} {name} {message}',
+            # [LEVEL] app.module: message  (source app is always in brackets)
+            'format': '{asctime} [{levelname}] {name}: {message}',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+            'style': '{',
+        },
+        'request': {
+            'format': '{asctime} [{levelname}] {name}: {message} · {status_code} {request}',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
             'style': '{',
         },
     },
@@ -286,8 +298,17 @@ LOGGING = {
             'formatter': 'verbose',
         },
     },
+    'loggers': {
+        # Business and platform apps — one entry per top-level package.
+        'config': {'handlers': ['console'], 'level': LOG_LEVEL, 'propagate': False},
+        'app': {'handlers': ['console'], 'level': LOG_LEVEL, 'propagate': False},
+        # Django internals: request errors (4xx/5xx) and security warnings.
+        'django.request': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'django.security': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'django': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+    },
     'root': {
         'handlers': ['console'],
-        'level': env('DJANGO_LOG_LEVEL', 'INFO'),
+        'level': LOG_LEVEL,
     },
 }

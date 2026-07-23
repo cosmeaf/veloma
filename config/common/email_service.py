@@ -164,13 +164,30 @@ class EmailService:
             return cls.send_sync(message)
         if mode == EmailTemplate.MODE_ASYNC:
             return cls.send_async(message)
+
+        # AUTO: prefer the background queue, but never let a missing or dead
+        # Celery worker silently swallow the email. If no worker answers a quick
+        # ping, or queueing raises, deliver synchronously in the same request.
+        if cls._workers_available():
+            try:
+                return cls.send_async(message)
+            except Exception:
+                logger.exception('Unable to queue email; falling back to synchronous send.')
+                return cls.send_sync(message)
+        logger.warning('No Celery worker available; sending %s email synchronously.', purpose or 'unnamed')
+        return cls.send_sync(message)
+
+    @staticmethod
+    def _workers_available():
+        """True when at least one Celery worker answers within a short timeout."""
         try:
-            return cls.send_async(message)
+            from config.celery import app
+
+            replies = app.control.ping(timeout=1.0)
+            return bool(replies)
         except Exception:
-            if not EmailSettings.load().auto_sync_fallback:
-                raise
-            logger.exception('Unable to queue email; controlled sync fallback is being used.')
-            return cls.send_sync(message)
+            # Broker unreachable or any control error: treat as no worker.
+            return False
 
     @classmethod
     def send_async(cls, message: EmailMessageData):

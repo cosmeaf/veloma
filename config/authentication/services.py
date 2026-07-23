@@ -15,6 +15,10 @@ from config.common.models import AuthenticationSettings, SecuritySettings
 from config.security.request import RequestContext
 from .models import AccountLifecycle, OTPChallenge, PasswordResetGrant, UserSession, hash_token
 
+import logging
+
+logger = logging.getLogger('config.authentication.services')
+
 
 class UserPresenter:
     @staticmethod

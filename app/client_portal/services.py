@@ -39,7 +39,7 @@ from .models import (
     ProtocolRequirement,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('app.client_portal.services')
 
 SAFE_NAME = re.compile(r'[^A-Za-z0-9._-]+')
 

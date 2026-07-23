@@ -5,9 +5,13 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 
+import logging
+
 from config.common.responses import api_response
 
 from . import selectors
+
+logger = logging.getLogger('app.client_portal.views')
 from .models import (
     Client,
     ClientFolder,
@@ -69,6 +73,9 @@ from .services import (
 
 
 def error(message, code=http_status.HTTP_400_BAD_REQUEST):
+    # Every business rejection is logged with its reason and the app namespace,
+    # so a 400 in the access log always has a matching "why" line.
+    logger.warning('rejected (%s): %s', code, message)
     return api_response(message=message, success=False, status=code)
 
 
