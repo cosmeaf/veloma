@@ -84,22 +84,21 @@ class Command(BaseCommand):
         EmailSettings.load()
         DocumentSettings.load()
 
-        default_vendor, _ = EmailVendor.objects.get_or_create(
-            name='Development console',
-            defaults={
-                'vendor_type': EmailVendor.TYPE_CONSOLE,
-                'from_email': 'no-reply@veloma.local',
-                'active': True,
-                'is_default': True,
-                'priority': 1,
-                'use_tls': False,
-                'use_ssl': False,
-            },
-        )
-        if not EmailVendor.objects.filter(is_default=True, active=True).exists():
-            default_vendor.is_default = True
-            default_vendor.active = True
-            default_vendor.save(update_fields=('is_default', 'active'))
+        # Seed a console vendor ONLY on a truly fresh install (no vendors at all).
+        # Once any vendor exists — e.g. a real SMTP configured in the Admin — a
+        # redeploy must never create, reactivate or re-default a vendor. This is
+        # what previously stole the default away from the office's SMTP.
+        if not EmailVendor.objects.exists():
+            EmailVendor.objects.create(
+                name='Development console',
+                vendor_type=EmailVendor.TYPE_CONSOLE,
+                from_email='no-reply@veloma.local',
+                active=True,
+                is_default=True,
+                priority=1,
+                use_tls=False,
+                use_ssl=False,
+            )
 
         for purpose, (subject, html, text) in TEMPLATES.items():
             EmailTemplate.objects.get_or_create(
