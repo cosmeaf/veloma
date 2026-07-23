@@ -35,9 +35,9 @@ def mirror_document_version_to_dropbox(self, version_id):
 
     if not DropboxService.is_enabled(DropboxService.PURPOSE_UPLOADS):
         return {'skipped': 'dropbox_disabled'}
-    version = DocumentVersion.objects.select_related('document', 'document__client', 'document__protocol').filter(
-        pk=version_id
-    ).first()
+    version = DocumentVersion.objects.select_related(
+        'document', 'document__client', 'document__protocol', 'document__folder'
+    ).filter(pk=version_id).first()
     if not version:
         return {'skipped': 'version_not_found'}
     # Only mirror files that passed the scan and are available.
@@ -46,12 +46,7 @@ def mirror_document_version_to_dropbox(self, version_id):
     try:
         with StorageService.open(version.storage_key) as handle:
             content = handle.read()
-        document = version.document
-        client_part = _slug(getattr(document.client, 'legal_name', '') or str(document.client_id))
-        protocol = document.protocol
-        protocol_part = _slug(getattr(protocol, 'number', '') or 'sem-protocolo') if protocol else 'sem-protocolo'
-        name = version.original_name or f'{version.id}'
-        relative = f'{client_part}/{protocol_part}/{document.id}/v{version.version_number}_{_slug(name)}'
+        relative = _upload_relative_path(version)
         path = DropboxService.upload_bytes(
             purpose=DropboxService.PURPOSE_UPLOADS,
             relative_path=relative,
@@ -89,14 +84,48 @@ def mirror_terms_acceptance_to_dropbox(self, acceptance_id):
     return {'acceptance_id': str(acceptance.id), 'dropbox_path': path}
 
 
-def _slug(value):
-    """Filesystem-safe path segment for Dropbox."""
+def _clean_segment(value, fallback='item'):
+    """Readable, Dropbox-safe path segment: keeps letters (incl. accents),
+    digits, spaces and common punctuation; drops path separators and control
+    characters. Not slugified — the archive is meant to be browsed by humans.
+    """
     import re
     import unicodedata
 
-    base = unicodedata.normalize('NFKD', str(value or '')).encode('ascii', 'ignore').decode('ascii')
-    base = re.sub(r'[^A-Za-z0-9._-]+', '-', base).strip('-._')
-    return base[:120] or 'item'
+    text = str(value or '').replace('\\', '-').replace('/', '-')
+    text = ''.join(ch for ch in text if unicodedata.category(ch)[0] != 'C')
+    text = re.sub(r'\s+', ' ', text).strip().strip('.').strip()
+    return text[:150] or fallback
+
+
+def _upload_relative_path(version):
+    """Builds ``Cliente/Protocolo-ou-Pasta/ficheiro`` for the Dropbox mirror.
+
+    With a protocol → ``número - título``; otherwise the folder name; failing
+    both, the document category or ``Outros``. Versions after the first get a
+    ``(vN)`` suffix before the extension; the first keeps the clean name.
+    """
+    document = version.document
+    client_part = _clean_segment(getattr(document.client, 'legal_name', '') or str(document.client_id), 'Cliente')
+
+    protocol = document.protocol
+    if protocol:
+        middle = f'{protocol.number} - {protocol.title}'.strip(' -')
+    elif document.folder_id:
+        middle = document.folder.name
+    else:
+        middle = document.category or 'Outros'
+    middle_part = _clean_segment(middle, 'Outros')
+
+    name = _clean_segment(version.original_name or str(version.id), 'ficheiro')
+    if version.version_number and version.version_number > 1:
+        if '.' in name:
+            stem, ext = name.split('.', 1)
+            name = f'{stem} (v{version.version_number}).{ext}'
+        else:
+            name = f'{name} (v{version.version_number})'
+
+    return f'{client_part}/{middle_part}/{name}'
 
 
 @shared_task
