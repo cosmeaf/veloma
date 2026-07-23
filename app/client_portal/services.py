@@ -370,7 +370,7 @@ class InvitationService:
         ).exists():
             raise ValueError('This email already has an active membership with the client.')
         if User.objects.filter(username__iexact=email, is_staff=True).exists():
-            raise ValueError('Django administrator accounts cannot be invited as clients.')
+            raise ValueError('Este endereço não pode ser convidado.')
 
         ClientInvitation.objects.filter(
             client=client,
@@ -499,7 +499,7 @@ class InvitationService:
         email = invitation.email.strip().lower()
         user = User.objects.filter(username__iexact=email).first()
         if user and (user.is_staff or user.is_superuser):
-            raise ValueError('This email belongs to a Django administrator account.')
+            raise ValueError('Este endereço não está disponível.')
 
         try:
             validate_password(password)

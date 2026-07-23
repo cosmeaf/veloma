@@ -1,17 +1,22 @@
+# Local development overrides.
+#
+# Every port binds to 127.0.0.1 only: nothing is reachable from the network,
+# not even other machines on the LAN. In production there is no port publishing
+# at all — Traefik reaches the services over the internal Docker network.
 services:
   veloma-app:
     ports:
-      - "19082:3000"
+      - "127.0.0.1:19082:3000"
   veloma-api:
     ports:
-      - "19080:8000"
+      - "127.0.0.1:19080:8000"
   veloma-postgres:
     ports:
-      - "19032:5432"
+      - "127.0.0.1:19032:5432"
   veloma-redis:
     ports:
-      - "19079:6379"
+      - "127.0.0.1:19079:6379"
   veloma-minio:
     ports:
-      - "19090:9000"
-      - "19091:9001"
+      - "127.0.0.1:19090:9000"
+      - "127.0.0.1:19091:9001"

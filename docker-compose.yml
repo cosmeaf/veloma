@@ -43,6 +43,24 @@ x-api-environment: &api-environment
 
 services:
   veloma-app:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
+        reservations:
+          memory: 192M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.next/cache
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: veloma-app
     build:
       context: ./frontend
@@ -66,6 +84,23 @@ services:
       start_period: 20s
 
   veloma-api:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
+        reservations:
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: veloma-api
     build:
       context: .
@@ -80,6 +115,7 @@ services:
       RUN_STAFF_SEED: ${RUN_STAFF_SEED}
     command: >-
       gunicorn config.wsgi:application
+      --config gunicorn.conf.py
       --bind 0.0.0.0:8000
       --workers ${GUNICORN_WORKERS}
       --timeout ${GUNICORN_TIMEOUT}
@@ -107,6 +143,20 @@ services:
       start_period: 40s
 
   veloma-postgres:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
+        reservations:
+          memory: 192M
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: veloma-postgres
     image: postgres:16-alpine
     restart: unless-stopped
@@ -125,6 +175,20 @@ services:
       retries: 10
 
   veloma-redis:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 192M
+        reservations:
+          memory: 64M
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: veloma-redis
     image: redis:7-alpine
     restart: unless-stopped
@@ -140,6 +204,23 @@ services:
       retries: 10
 
   veloma-celery:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
+        reservations:
+          memory: 192M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: veloma-celery
     build:
       context: .
@@ -157,6 +238,23 @@ services:
         condition: service_healthy
 
   veloma-celery-beat:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 192M
+        reservations:
+          memory: 64M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: veloma-celery-beat
     build:
       context: .
@@ -174,6 +272,20 @@ services:
         condition: service_healthy
 
   veloma-clamav:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1536M
+        reservations:
+          memory: 768M
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: veloma-clamav
     image: clamav/clamav:latest
     # ClamAV only publishes amd64 images; on arm64 hosts Docker emulates it.
@@ -195,6 +307,20 @@ services:
       start_period: 180s
 
   veloma-minio:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          memory: 128M
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: veloma-minio
     image: minio/minio:latest
     restart: unless-stopped

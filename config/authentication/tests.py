@@ -74,7 +74,7 @@ class AuthenticationCoreTests(APITestCase):
             'password': 'StrongPassword@123',
         }, format='json')
         self.assertEqual(response.status_code, 400)
-        self.assertIn('Django administrators', str(response.data))
+        self.assertIn('não tem acesso a esta área', str(response.data))
 
     def _active_user(self, email='user@example.com'):
         user = User.objects.create_user(

@@ -201,7 +201,7 @@ class LoginSerializer(serializers.Serializer):
                 user=user,
                 reason='django_admin_frontend_login_denied',
             )
-            raise serializers.ValidationError('Django administrators must authenticate through /admin/.')
+            raise serializers.ValidationError('Esta conta não tem acesso a esta área.')
         attrs['user'] = user
         return attrs
 
