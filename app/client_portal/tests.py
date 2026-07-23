@@ -464,6 +464,23 @@ class DocumentTests(ClientPortalTestCase):
         self.assertEqual(document.status, Document.STATUS_AVAILABLE)
         self.assertIsNone(document.purge_after)
 
+    def test_client_upload_without_protocol_auto_creates_one(self):
+        user, _member = self._member()
+        zip_file = SimpleUploadedFile('docs.zip', b'PK\x03\x04 conteudo', content_type='application/zip')
+        document, _version = DocumentService.upload(
+            client=self.client_record, upload=zip_file, uploaded_by=user, is_staff=False,
+        )
+        document.refresh_from_db()
+        self.assertIsNotNone(document.protocol_id)
+        self.assertTrue(document.protocol.number.startswith('VEL-'))
+        # A second client upload reuses the same open request (no sprawl).
+        zip2 = SimpleUploadedFile('docs2.zip', b'PK\x03\x04 outro', content_type='application/zip')
+        document2, _v2 = DocumentService.upload(
+            client=self.client_record, upload=zip2, uploaded_by=user, is_staff=False,
+        )
+        document2.refresh_from_db()
+        self.assertEqual(document2.protocol_id, document.protocol_id)
+
     def test_upload_creates_document_and_version(self):
         user, _member = self._member()
         protocol = self._protocol()

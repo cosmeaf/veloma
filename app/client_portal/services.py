@@ -854,13 +854,38 @@ class ProtocolService:
         return protocol
 
     @classmethod
+    def auto_protocol(cls, *, client, uploaded_by=None, request=None):
+        """Returns a protocol to attach an upload to when none was given.
+
+        Reuses the client's current open request (waiting for documents) so a
+        submission's files stay together; otherwise opens one automatically with
+        the default subject. Never leaves a document without a protocol.
+        """
+        existing = (
+            Protocol.objects.filter(client=client, status=Protocol.STATUS_WAITING_DOCUMENTS)
+            .order_by('-created_at')
+            .first()
+        )
+        if existing:
+            return existing
+        from .models import ProtocolSubject
+
+        subject = ProtocolSubject.objects.filter(active=True).order_by('order', 'name').first()
+        if subject is None:
+            return None
+        return cls.open_request(
+            client=client, subject=subject, title='Envio de documentos',
+            created_by=uploaded_by, request=request, notify=False,
+        )
+
+    @classmethod
     @transaction.atomic
-    def open_request(cls, *, client, subject, title='', description='', created_by=None, request=None):
+    def open_request(cls, *, client, subject, title='', description='', created_by=None, request=None, notify=True):
         """Client self-service: opens a protocol for a chosen subject with its SLA.
 
         Stamps the response deadline (now + subject SLA), leaves the protocol
-        waiting for documents, and confirms to the client when to expect an
-        answer.
+        waiting for documents, and (when ``notify``) confirms to the client when
+        to expect an answer.
         """
         if not client.is_active:
             raise ValueError('Só é possível abrir pedidos para clientes ativos.')
@@ -902,11 +927,12 @@ class ProtocolService:
             metadata={'subject': subject.name, 'sla_hours': sla_hours},
             request=request,
         )
-        cls._notify_members(
-            protocol,
-            purpose='protocol_request_received',
-            extra={'response_due_at': response_due_at, 'sla_hours': sla_hours, 'subject': subject.name},
-        )
+        if notify:
+            cls._notify_members(
+                protocol,
+                purpose='protocol_request_received',
+                extra={'response_due_at': response_due_at, 'sla_hours': sla_hours, 'subject': subject.name},
+            )
         return protocol
 
     @staticmethod
@@ -1129,6 +1155,11 @@ class DocumentService:
             raise ValueError('Uploads are blocked for inactive clients.')
         if protocol is not None and not protocol.is_open:
             raise ValueError('This protocol is closed for new documents.')
+        # A client submission always gets a protocol number: reuse the open
+        # request or open one automatically, so nothing is filed "sem protocolo".
+        # Staff filing internally to a folder keeps its current behaviour.
+        if protocol is None and not is_staff:
+            protocol = ProtocolService.auto_protocol(client=client, uploaded_by=uploaded_by, request=request)
         name, extension = cls.validate_upload(
             upload=upload, client=client, protocol=protocol, is_staff=is_staff,
         )

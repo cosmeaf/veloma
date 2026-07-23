@@ -208,10 +208,11 @@ class DocumentAdmin(ModelAdmin):
     readonly_fields = (
         'id', 'client', 'protocol', 'original_name', 'current_version', 'status',
         'uploaded_by', 'uploader_name_snapshot', 'uploader_email_snapshot',
-        'archived_at', 'created_at', 'updated_at',
+        'archived_at', 'deleted_at', 'deleted_by', 'deleted_by_name_snapshot',
+        'deletion_reason', 'purge_after', 'purged_at', 'created_at', 'updated_at',
     )
     inlines = (DocumentVersionInline,)
-    actions = ('rescan_documents', 'archive_documents')
+    actions = ('rescan_documents', 'archive_documents', 'delete_documents', 'restore_documents')
 
     def get_actions(self, request):
         actions = super().get_actions(request)
@@ -239,6 +240,34 @@ class DocumentAdmin(ModelAdmin):
             DocumentService.archive(document=document, performed_by=request.user, request=request)
             count += 1
         self.message_user(request, f'{count} document(s) archived.')
+
+    @action(description='Eliminar (mover para a reciclagem)')
+    def delete_documents(self, request, queryset):
+        count = 0
+        for document in queryset.exclude(status=Document.STATUS_DELETED).filter(purged_at__isnull=True):
+            try:
+                DocumentService.delete(
+                    document=document, performed_by=request.user,
+                    reason='Eliminado no Admin.', request=request,
+                )
+                count += 1
+            except ValueError:
+                continue
+        self.message_user(
+            request,
+            f'{count} documento(s) na reciclagem (restauráveis 30 dias; recuperáveis no Dropbox).',
+        )
+
+    @action(description='Restaurar da reciclagem')
+    def restore_documents(self, request, queryset):
+        count = 0
+        for document in queryset.filter(status=Document.STATUS_DELETED, purged_at__isnull=True):
+            try:
+                DocumentService.restore(document=document, performed_by=request.user, request=request)
+                count += 1
+            except ValueError:
+                continue
+        self.message_user(request, f'{count} documento(s) restaurado(s).')
 
 
 @register(ClientFolder, site=veloma_admin_site)
