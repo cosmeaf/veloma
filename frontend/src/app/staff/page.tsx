@@ -3,20 +3,26 @@ import Link from 'next/link';
 
 import { ProtocolStatusBadge } from '@/components/status';
 import { Card, CardHeader, EmptyState, PageHeader, StatTile } from '@/components/ui';
+import { TwoFactorBanner } from '@/features/account/two-factor-banner';
 import { authedData } from '@/lib/api/backend';
+import { getCurrentUser } from '@/lib/auth/session';
 import { formatDate } from '@/lib/utils/format';
 import type { Dashboard } from '@/types';
 
 export const metadata: Metadata = { title: 'Resumo da equipa' };
 
 export default async function StaffDashboardPage() {
-  const data = await authedData<Dashboard>('/api/client-portal/dashboard/');
+  const [data, user] = await Promise.all([
+    authedData<Dashboard>('/api/client-portal/dashboard/'),
+    getCurrentUser(),
+  ]);
   const counts = data.protocols;
   const staff = data.staff;
 
   return (
     <>
       <PageHeader title="Resumo" description="Carteira de clientes e trabalho em curso." />
+      <TwoFactorBanner enabled={Boolean(user?.two_factor_email)} href="/staff/seguranca" />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Aguardam cliente" value={counts.waiting_documents ?? 0} href="/staff/protocolos?status=waiting_documents" />

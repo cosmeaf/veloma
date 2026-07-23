@@ -156,6 +156,42 @@ export function StatTile({
   return <div className={base}>{inner}</div>;
 }
 
+export function Switch({
+  checked,
+  onChange,
+  disabled,
+  label,
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  disabled?: boolean;
+  label?: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-sun',
+        'disabled:cursor-not-allowed disabled:opacity-60',
+        checked ? 'bg-navy' : 'bg-lilac',
+      )}
+    >
+      <span
+        className={cn(
+          'inline-block size-5 transform rounded-full bg-white shadow transition-transform',
+          checked ? 'translate-x-5' : 'translate-x-0.5',
+        )}
+      />
+    </button>
+  );
+}
+
 export function PageHeader({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">

@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 
 import { LogoutButton } from '@/components/logout-button';
 import { useToast } from '@/components/toast';
-import { Alert, Badge, Button, Card, CardHeader, EmptyState, Field, Input, PageHeader } from '@/components/ui';
+import { Alert, Badge, Button, Card, CardHeader, EmptyState, Field, Input, PageHeader, Switch } from '@/components/ui';
 import { formatDateTime } from '@/lib/utils/format';
 import { changePasswordSchema, type ChangePasswordInput } from '@/lib/validation/schemas';
 import type { AccessEvent, Session, User } from '@/types';
@@ -111,9 +111,7 @@ export function SecurityPanel({
                 <ShieldCheck className="text-gold size-4.5" aria-hidden />
               </span>
               <div>
-                <p className="text-navy text-sm font-medium">
-                  {twoFactor ? 'Ativa' : 'Desativada'}
-                </p>
+                <p className="text-navy text-sm font-medium">{twoFactor ? 'Ativa' : 'Desativada'}</p>
                 <p className="text-navy/55 mt-0.5 text-xs">
                   {twoFactor
                     ? 'Ao entrar, pedimos o código enviado para o seu e-mail.'
@@ -121,15 +119,15 @@ export function SecurityPanel({
                 </p>
               </div>
             </div>
-            <Button
-              variant={twoFactor ? 'secondary' : 'primary'}
-              size="sm"
-              disabled={savingTwoFactor}
-              onClick={() => toggleTwoFactor(!twoFactor)}
-            >
-              {savingTwoFactor ? <Loader2 className="size-4 animate-spin" /> : null}
-              {twoFactor ? 'Desativar' : 'Ativar'}
-            </Button>
+            <div className="flex items-center gap-2">
+              {savingTwoFactor ? <Loader2 className="text-navy/50 size-4 animate-spin" /> : null}
+              <Switch
+                checked={twoFactor}
+                disabled={savingTwoFactor}
+                onChange={(next) => toggleTwoFactor(next)}
+                label="Verificação em duas etapas"
+              />
+            </div>
           </div>
         </Card>
 

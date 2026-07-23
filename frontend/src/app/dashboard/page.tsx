@@ -3,19 +3,25 @@ import Link from 'next/link';
 
 import { ProtocolStatusBadge } from '@/components/status';
 import { Card, CardHeader, EmptyState, PageHeader, StatTile } from '@/components/ui';
+import { TwoFactorBanner } from '@/features/account/two-factor-banner';
 import { authedData } from '@/lib/api/backend';
+import { getCurrentUser } from '@/lib/auth/session';
 import { formatDate } from '@/lib/utils/format';
 import type { Dashboard } from '@/types';
 
 export const metadata: Metadata = { title: 'Resumo' };
 
 export default async function DashboardPage() {
-  const data = await authedData<Dashboard>('/api/client-portal/dashboard/');
+  const [data, user] = await Promise.all([
+    authedData<Dashboard>('/api/client-portal/dashboard/'),
+    getCurrentUser(),
+  ]);
   const counts = data.protocols;
 
   return (
     <>
       <PageHeader title="Resumo" description="Estado dos seus pedidos junto do escritório." />
+      <TwoFactorBanner enabled={Boolean(user?.two_factor_email)} href="/dashboard/seguranca" />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Aguardam documentos" value={counts.waiting_documents ?? 0} href="/dashboard/protocolos" />
