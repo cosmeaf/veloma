@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 
 import { InvitationStatusBadge, ProtocolStatusBadge } from '@/components/status';
 import { Badge, Card, CardHeader, EmptyState, PageHeader } from '@/components/ui';
+import { EditClientCard } from '@/features/clients/edit-client';
 import { InvitationForm } from '@/features/invitations/invitation-form';
 import { BackendError, authedData } from '@/lib/api/backend';
 import { MEMBER_ROLES, formatDate, formatDateTime, label } from '@/lib/utils/format';
@@ -43,6 +44,9 @@ export default async function StaffClientDetailPage({ params }: { params: Promis
         description={`NIF ${client.nif} · ${client.city || 'Portugal'}`}
         action={<Badge tone={client.status === 'active' ? 'success' : 'warning'}>{client.status}</Badge>}
       />
+
+      {/* Full width so the edit form has room when opened. */}
+      <EditClientCard client={client} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

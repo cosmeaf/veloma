@@ -17,6 +17,8 @@ export type User = {
   is_admin: boolean;
   is_platform_staff: boolean;
   must_change_credentials?: boolean;
+  two_factor_email?: boolean;
+  preferences?: { theme: 'light' | 'dark'; sound_enabled: boolean };
 };
 
 export type Session = {
@@ -30,6 +32,21 @@ export type Session = {
   expires_at: string;
   revoked_at: string | null;
   revoke_reason: string;
+  metadata?: { new_device?: boolean; new_ip?: boolean; new_country?: boolean };
+};
+
+export type AccessEvent = {
+  id: string;
+  event_type: string;
+  status: string;
+  ip_address: string | null;
+  country_code: string;
+  device: string;
+  reason: string;
+  new_device: boolean;
+  new_ip: boolean;
+  new_country: boolean;
+  created_at: string;
 };
 
 export type ClientSummary = {

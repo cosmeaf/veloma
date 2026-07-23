@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 
 export function cn(...values: Array<string | false | null | undefined>): string {
@@ -123,13 +124,36 @@ export function EmptyState({ title, description }: { title: string; description?
   );
 }
 
-export function StatTile({ label, value, tone = 'neutral' }: { label: string; value: number | string; tone?: Tone }) {
-  return (
-    <div className="rounded-xl border border-mist bg-white p-4">
-      <p className="text-xs font-medium tracking-wide text-navy/55 uppercase">{label}</p>
+export function StatTile({
+  label,
+  value,
+  tone = 'neutral',
+  href,
+}: {
+  label: string;
+  value: number | string;
+  tone?: Tone;
+  /** When set, the whole tile is a link with hover feedback. */
+  href?: string;
+}) {
+  const inner = (
+    <>
+      <p className="text-navy/55 text-xs font-medium tracking-wide uppercase">{label}</p>
       <p className={cn('mt-2 text-2xl font-semibold', tone === 'danger' ? 'text-red-600' : 'text-navy')}>{value}</p>
-    </div>
+    </>
   );
+  const base = 'rounded-xl border border-mist bg-white p-4 block';
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={cn(base, 'hover:border-gold-sun/50 hover:shadow-sm transition-all')}
+      >
+        {inner}
+      </Link>
+    );
+  }
+  return <div className={base}>{inner}</div>;
 }
 
 export function PageHeader({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {

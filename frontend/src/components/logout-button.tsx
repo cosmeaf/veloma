@@ -10,10 +10,12 @@ export function LogoutButton({
   all = false,
   label = 'Sair',
   onNavy = false,
+  iconOnly = false,
 }: {
   all?: boolean;
   label?: string;
   onNavy?: boolean;
+  iconOnly?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -35,10 +37,15 @@ export function LogoutButton({
       size="sm"
       onClick={logout}
       disabled={busy}
-      className={cn(onNavy && 'border-white/20 bg-white/10 text-ivory hover:bg-white/20')}
+      className={cn(
+        onNavy && 'border-white/25 bg-white/15 text-ivory hover:bg-white/25 hover:text-white',
+        iconOnly && 'px-2',
+      )}
+      title={iconOnly ? label : undefined}
+      aria-label={label}
     >
       <LogOut className="size-4" aria-hidden />
-      {label}
+      {!iconOnly ? label : null}
     </Button>
   );
 }

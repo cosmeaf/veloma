@@ -47,34 +47,36 @@ export default async function CompanyPage() {
         action={<Badge tone={client.status === 'active' ? 'success' : 'warning'}>{client.status}</Badge>}
       />
 
-      <Card>
-        <CardHeader title="Dados da empresa" description="Para alterações, fale com o escritório." />
-        <dl className="divide-y divide-mist/70">
-          {rows.map(([term, value]) => (
-            <div key={term} className="flex flex-wrap justify-between gap-2 px-5 py-3">
-              <dt className="text-sm text-navy/55">{term}</dt>
-              <dd className="text-sm font-medium text-navy">{value}</dd>
-            </div>
-          ))}
-        </dl>
-      </Card>
-
-      <Card>
-        <CardHeader title="Membros" description="Quem tem acesso a esta área." />
-        <ul className="divide-y divide-mist/70">
-          {members.members.map((member) => (
-            <li key={member.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
-              <div>
-                <p className="text-sm font-medium text-navy">
-                  {`${member.first_name} ${member.last_name}`.trim() || member.email}
-                </p>
-                <p className="mt-0.5 text-xs text-navy/55">{member.email}</p>
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader title="Dados da empresa" description="Para alterações, fale com o escritório." />
+          <dl className="divide-mist/70 divide-y">
+            {rows.map(([term, value]) => (
+              <div key={term} className="flex flex-wrap justify-between gap-2 px-5 py-3">
+                <dt className="text-navy/55 text-sm">{term}</dt>
+                <dd className="text-navy text-sm font-medium">{value}</dd>
               </div>
-              <Badge>{label(MEMBER_ROLES, member.role)}</Badge>
-            </li>
-          ))}
-        </ul>
-      </Card>
+            ))}
+          </dl>
+        </Card>
+
+        <Card>
+          <CardHeader title="Membros" description="Quem tem acesso a esta área." />
+          <ul className="divide-mist/70 divide-y">
+            {members.members.map((member) => (
+              <li key={member.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+                <div>
+                  <p className="text-navy text-sm font-medium">
+                    {`${member.first_name} ${member.last_name}`.trim() || member.email}
+                  </p>
+                  <p className="text-navy/55 mt-0.5 text-xs">{member.email}</p>
+                </div>
+                <Badge>{label(MEMBER_ROLES, member.role)}</Badge>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </div>
     </>
   );
 }

@@ -259,6 +259,12 @@ class AccountLifecycle(models.Model):
     # Accounts created in bulk share a temporary password: the holder must set
     # their own e-mail and password before doing any work.
     must_change_credentials = models.BooleanField(default=False, db_index=True)
+    # Per-user two-factor by email, on top of the global setting.
+    two_factor_email_enabled = models.BooleanField(default=False)
+    # UI preferences that follow the user across devices.
+    theme = models.CharField(max_length=8, choices=(('light', 'Light'), ('dark', 'Dark')), default='light')
+    sound_enabled = models.BooleanField(default=True)
+    notifications_seen_at = models.DateTimeField(blank=True, null=True)
     credentials_updated_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 

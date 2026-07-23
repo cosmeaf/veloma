@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 
 import { SidebarShell } from '@/components/sidebar-shell';
+import { ThemeProvider } from '@/components/theme-provider';
+import { ToastProvider } from '@/components/toast';
 import { ClientTour } from '@/features/onboarding/tour';
 import { displayName, getCurrentUser } from '@/lib/auth/session';
 
@@ -9,9 +11,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect('/entrar?next=/dashboard');
   if (user.must_change_credentials) redirect('/primeiro-acesso');
 
+  const prefs = user.preferences ?? { theme: 'light' as const, sound_enabled: true };
+
   return (
-    <SidebarShell area="client" userName={displayName(user)} scope="Área de cliente" headerAction={<ClientTour />}>
-      {children}
-    </SidebarShell>
+    <ThemeProvider initialTheme={prefs.theme} initialSound={prefs.sound_enabled}>
+      <ToastProvider>
+        <SidebarShell area="client" userName={displayName(user)} scope="Área de cliente" headerAction={<ClientTour />}>
+          {children}
+        </SidebarShell>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }

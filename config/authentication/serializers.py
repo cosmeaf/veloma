@@ -209,7 +209,10 @@ class LoginSerializer(serializers.Serializer):
         request = self.context.get('request')
         user = self.validated_data['user']
         auth_settings = AuthenticationSettings.load()
-        if auth_settings.login_otp_enabled:
+        # OTP is required when the office enables it globally, or when this user
+        # turned on two-factor by email for their own account.
+        user_2fa = AccountLifecycle.objects.filter(user=user, two_factor_email_enabled=True).exists()
+        if auth_settings.login_otp_enabled or user_2fa:
             challenge, code = OTPService.create(
                 user=user,
                 purpose=OTPChallenge.PURPOSE_LOGIN,
@@ -514,6 +517,49 @@ class FirstAccessSerializer(serializers.Serializer):
             raise serializers.ValidationError(str(exc)) from exc
         send_optional_email(purpose='password_changed', user=user, request=request)
         return {'completed': True, 'email': user.email, 'sessions_revoked': True}
+
+
+class TwoFactorSerializer(serializers.Serializer):
+    """Turns email two-factor on or off for the authenticated account."""
+
+    enabled = serializers.BooleanField()
+
+    def save(self):
+        from .models import AccountLifecycle
+
+        request = self.context['request']
+        record, _ = AccountLifecycle.objects.get_or_create(user=request.user)
+        record.two_factor_email_enabled = self.validated_data['enabled']
+        record.save(update_fields=('two_factor_email_enabled',))
+        SecurityService.record_activity(
+            event_type='two_factor_changed',
+            status=AuthenticationActivity.STATUS_SUCCESS,
+            request=request,
+            user=request.user,
+            metadata={'enabled': record.two_factor_email_enabled},
+        )
+        return {'two_factor_email': record.two_factor_email_enabled}
+
+
+class PreferencesSerializer(serializers.Serializer):
+    theme = serializers.ChoiceField(choices=('light', 'dark'), required=False)
+    sound_enabled = serializers.BooleanField(required=False)
+
+    def save(self):
+        from .models import AccountLifecycle
+
+        request = self.context['request']
+        record, _ = AccountLifecycle.objects.get_or_create(user=request.user)
+        fields = []
+        if 'theme' in self.validated_data:
+            record.theme = self.validated_data['theme']
+            fields.append('theme')
+        if 'sound_enabled' in self.validated_data:
+            record.sound_enabled = self.validated_data['sound_enabled']
+            fields.append('sound_enabled')
+        if fields:
+            record.save(update_fields=fields)
+        return {'theme': record.theme, 'sound_enabled': record.sound_enabled}
 
 
 class VelomaTokenRefreshSerializer(TokenRefreshSerializer):

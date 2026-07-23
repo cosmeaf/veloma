@@ -18,14 +18,15 @@ export default async function DashboardPage() {
       <PageHeader title="Resumo" description="Estado dos seus pedidos junto do escritório." />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Aguardam documentos" value={counts.waiting_documents ?? 0} />
-        <StatTile label="Em análise" value={counts.under_review ?? 0} />
+        <StatTile label="Aguardam documentos" value={counts.waiting_documents ?? 0} href="/dashboard/protocolos" />
+        <StatTile label="Em análise" value={counts.under_review ?? 0} href="/dashboard/protocolos" />
         <StatTile
           label="Ação necessária"
           value={counts.action_required ?? 0}
           tone={counts.action_required ? 'danger' : 'neutral'}
+          href="/dashboard/protocolos"
         />
-        <StatTile label="Concluídos" value={counts.completed ?? 0} />
+        <StatTile label="Concluídos" value={counts.completed ?? 0} href="/dashboard/protocolos" />
       </div>
 
       {data.requirements_pending ? (

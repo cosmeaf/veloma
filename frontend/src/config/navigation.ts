@@ -3,7 +3,6 @@ import {
   FileStack,
   FolderTree,
   LayoutDashboard,
-  Mail,
   ShieldCheck,
   Users,
   type LucideIcon,
@@ -41,10 +40,8 @@ export const STAFF_NAVIGATION: NavSection[] = [
   },
   {
     title: 'Carteira',
-    links: [
-      { href: '/staff/clientes', label: 'Clientes', icon: Building2 },
-      { href: '/staff/convites', label: 'Convites', icon: Mail },
-    ],
+    // Invitations live inside Clients (a tab there), not as a separate entry.
+    links: [{ href: '/staff/clientes', label: 'Clientes', icon: Building2 }],
   },
   {
     title: 'Conta',

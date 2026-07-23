@@ -1,11 +1,15 @@
 from django.urls import path
 
 from .views import (
+    AccessHistoryView,
+    NotificationsView,
+    PreferencesView,
     FirstAccessView,
     LoginView,
     LogoutAllView,
     LogoutView,
     MeView,
+    TwoFactorView,
     OTPResendView,
     OTPVerifyView,
     PasswordChangeView,
@@ -32,6 +36,10 @@ urlpatterns = [
     path('logout/all/', LogoutAllView.as_view(), name='logout-all'),
     path('first-access/', FirstAccessView.as_view(), name='first-access'),
     path('me/', MeView.as_view(), name='me'),
+    path('two-factor/', TwoFactorView.as_view(), name='two-factor'),
+    path('access-history/', AccessHistoryView.as_view(), name='access-history'),
+    path('preferences/', PreferencesView.as_view(), name='preferences'),
+    path('notifications/', NotificationsView.as_view(), name='notifications'),
     path('sessions/', SessionListView.as_view(), name='sessions'),
     path('sessions/<uuid:session_id>/revoke/', SessionRevokeView.as_view(), name='session-revoke'),
 ]

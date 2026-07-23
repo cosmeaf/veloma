@@ -34,6 +34,18 @@ class UserPresenter:
             'must_change_credentials': AccountLifecycle.objects.filter(
                 user=user, must_change_credentials=True,
             ).exists(),
+            'two_factor_email': AccountLifecycle.objects.filter(
+                user=user, two_factor_email_enabled=True,
+            ).exists(),
+            'preferences': UserPresenter._preferences(user),
+        }
+
+    @staticmethod
+    def _preferences(user):
+        record = AccountLifecycle.objects.filter(user=user).first()
+        return {
+            'theme': record.theme if record else 'light',
+            'sound_enabled': record.sound_enabled if record else True,
         }
 
 

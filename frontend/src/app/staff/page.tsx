@@ -19,21 +19,22 @@ export default async function StaffDashboardPage() {
       <PageHeader title="Resumo" description="Carteira de clientes e trabalho em curso." />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Aguardam cliente" value={counts.waiting_documents ?? 0} />
-        <StatTile label="Para analisar" value={counts.documents_received ?? 0} />
-        <StatTile label="Em análise" value={counts.under_review ?? 0} />
-        <StatTile label="Atrasados" value={staff?.overdue ?? 0} tone={staff?.overdue ? 'danger' : 'neutral'} />
+        <StatTile label="Aguardam cliente" value={counts.waiting_documents ?? 0} href="/staff/protocolos?status=waiting_documents" />
+        <StatTile label="Para analisar" value={counts.documents_received ?? 0} href="/staff/protocolos?status=documents_received" />
+        <StatTile label="Em análise" value={counts.under_review ?? 0} href="/staff/protocolos?status=under_review" />
+        <StatTile label="Atrasados" value={staff?.overdue ?? 0} tone={staff?.overdue ? 'danger' : 'neutral'} href="/staff/protocolos" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Clientes" value={staff?.clients ?? 0} />
-        <StatTile label="Uploads em análise" value={staff?.pending_scan ?? 0} />
+        <StatTile label="Clientes" value={staff?.clients ?? 0} href="/staff/clientes" />
+        <StatTile label="Uploads em análise" value={staff?.pending_scan ?? 0} href="/staff/documentos" />
         <StatTile
           label="Em quarentena"
           value={staff?.quarantined ?? 0}
           tone={staff?.quarantined ? 'danger' : 'neutral'}
+          href="/staff/documentos"
         />
-        <StatTile label="Convites pendentes" value={staff?.pending_invitations ?? 0} />
+        <StatTile label="Convites pendentes" value={staff?.pending_invitations ?? 0} href="/staff/clientes/convites" />
       </div>
 
       <Card>
