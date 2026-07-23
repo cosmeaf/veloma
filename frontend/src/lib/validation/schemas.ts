@@ -43,6 +43,17 @@ export const changePasswordSchema = z
     message: 'As palavras-passe não coincidem.',
   });
 
+export const firstAccessSchema = z
+  .object({
+    email: z.string().email('Indique um e-mail válido.'),
+    password,
+    password2: z.string(),
+  })
+  .refine((data) => data.password === data.password2, {
+    path: ['password2'],
+    message: 'As palavras-passe não coincidem.',
+  });
+
 export const acceptInvitationSchema = z
   .object({
     first_name: z.string().min(1, 'Indique o primeiro nome.').max(150),
@@ -99,6 +110,7 @@ export type OtpInput = z.infer<typeof otpSchema>;
 export type RecoveryInput = z.infer<typeof recoverySchema>;
 export type ResetInput = z.infer<typeof resetSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type FirstAccessInput = z.infer<typeof firstAccessSchema>;
 export type AcceptInvitationInput = z.infer<typeof acceptInvitationSchema>;
 export type CommentInput = z.infer<typeof commentSchema>;
 export type ClientInput = z.infer<typeof clientSchema>;

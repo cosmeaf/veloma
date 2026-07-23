@@ -31,6 +31,9 @@ class UserPresenter:
             'is_active': user.is_active,
             'is_admin': bool(user.is_staff or user.is_superuser),
             'is_platform_staff': 'STAFF' in roles and not user.is_staff,
+            'must_change_credentials': AccountLifecycle.objects.filter(
+                user=user, must_change_credentials=True,
+            ).exists(),
         }
 
 
@@ -299,6 +302,69 @@ class SessionService:
             cls.revoke(session=session, reason=reason)
             count += 1
         return count
+
+
+class FirstAccessService:
+    """Forces a credential change on the first sign-in of a seeded account.
+
+    The flag is checked by the portal permissions, so an account that has not
+    completed this step can authenticate and fix its own credentials but cannot
+    reach any business endpoint.
+    """
+
+    @staticmethod
+    def require(user):
+        record, _ = AccountLifecycle.objects.get_or_create(user=user)
+        record.must_change_credentials = True
+        record.save(update_fields=('must_change_credentials',))
+        return record
+
+    @staticmethod
+    def is_pending(user):
+        if not user or not user.is_authenticated:
+            return False
+        return AccountLifecycle.objects.filter(user=user, must_change_credentials=True).exists()
+
+    @staticmethod
+    @transaction.atomic
+    def complete(*, user, email, password, request=None):
+        """Applies the new e-mail and password, then revokes every session."""
+        from config.security.services import SecurityService
+        from .models import AuthenticationActivity
+
+        email = (email or '').strip().lower()
+        if not email:
+            raise ValueError('An email address is required.')
+        if User.objects.filter(username__iexact=email).exclude(pk=user.pk).exists():
+            raise ValueError('This email is already in use.')
+        if user.check_password(password):
+            raise ValueError('Choose a password different from the temporary one.')
+        try:
+            validate_password(password, user=user)
+        except DjangoValidationError as exc:
+            raise ValueError(' '.join(exc.messages)) from exc
+
+        previous_email = user.email
+        # The project keeps username and email in sync.
+        user.username = email
+        user.email = email
+        user.set_password(password)
+        user.save(update_fields=('username', 'email', 'password'))
+
+        record, _ = AccountLifecycle.objects.get_or_create(user=user)
+        record.must_change_credentials = False
+        record.credentials_updated_at = timezone.now()
+        record.save(update_fields=('must_change_credentials', 'credentials_updated_at'))
+
+        revoked = SessionService.revoke_all(user=user, reason='first_access_completed')
+        SecurityService.record_activity(
+            event_type='first_access',
+            status=AuthenticationActivity.STATUS_SUCCESS,
+            request=request,
+            user=user,
+            metadata={'email_changed': previous_email != email, 'sessions_revoked': revoked},
+        )
+        return user
 
 
 class AccountLifecycleService:

@@ -256,6 +256,10 @@ class AccountLifecycle(models.Model):
     )
     archive_reason = models.CharField(max_length=255, blank=True)
     last_reactivated_at = models.DateTimeField(blank=True, null=True)
+    # Accounts created in bulk share a temporary password: the holder must set
+    # their own e-mail and password before doing any work.
+    must_change_credentials = models.BooleanField(default=False, db_index=True)
+    credentials_updated_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

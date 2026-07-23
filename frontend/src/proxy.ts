@@ -16,7 +16,7 @@ const STAFF_PREFIX = '/staff';
 const CLIENT_PREFIX = '/dashboard';
 
 function isProtected(pathname: string): boolean {
-  return pathname.startsWith(STAFF_PREFIX) || pathname.startsWith(CLIENT_PREFIX);
+  return pathname.startsWith(STAFF_PREFIX) || pathname.startsWith(CLIENT_PREFIX) || pathname === '/primeiro-acesso';
 }
 
 function redirectToLogin(request: NextRequest): NextResponse {
@@ -109,5 +109,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/staff/:path*', '/entrar'],
+  matcher: ['/dashboard/:path*', '/staff/:path*', '/primeiro-acesso', '/entrar'],
 };

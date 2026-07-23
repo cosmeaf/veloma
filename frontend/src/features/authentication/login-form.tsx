@@ -37,7 +37,13 @@ export function LoginForm({ next }: { next?: string }) {
       setNotice('Enviámos um código de confirmação para o seu e-mail.');
       return;
     }
-    router.replace(next ?? (payload.user?.roles?.includes('STAFF') || payload.user?.roles?.includes('STAFF_MANAGER') ? '/staff' : '/dashboard'));
+    if (payload.user?.must_change_credentials) {
+      router.replace('/primeiro-acesso');
+      router.refresh();
+      return;
+    }
+    const staff = payload.user?.roles?.includes('STAFF') || payload.user?.roles?.includes('STAFF_MANAGER');
+    router.replace(next ?? (staff ? '/staff' : '/dashboard'));
     router.refresh();
   }
 

@@ -16,6 +16,7 @@ export type User = {
   is_active: boolean;
   is_admin: boolean;
   is_platform_staff: boolean;
+  must_change_credentials?: boolean;
 };
 
 export type Session = {

@@ -15,7 +15,14 @@ from config.common.models import AuthenticationSettings, SecuritySettings
 from config.security.request import RequestContext
 from config.security.services import SecurityService
 from .models import AccountLifecycle, AuthenticationActivity, OTPChallenge, UserSession
-from .services import OTPService, PasswordResetService, SessionService, UserPresenter, UserService
+from .services import (
+    FirstAccessService,
+    OTPService,
+    PasswordResetService,
+    SessionService,
+    UserPresenter,
+    UserService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -480,6 +487,33 @@ class PasswordChangeSerializer(serializers.Serializer):
             user=user,
         )
         return {'changed': True, 'sessions_revoked': AuthenticationSettings.load().revoke_sessions_after_password_change}
+
+
+class FirstAccessSerializer(serializers.Serializer):
+    """First sign-in of a seeded account: own e-mail and a personal password."""
+
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, trim_whitespace=False)
+    password2 = serializers.CharField(write_only=True, trim_whitespace=False)
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({'password2': 'Passwords do not match.'})
+        return attrs
+
+    def save(self):
+        request = self.context['request']
+        try:
+            user = FirstAccessService.complete(
+                user=request.user,
+                email=self.validated_data['email'],
+                password=self.validated_data['password'],
+                request=request,
+            )
+        except ValueError as exc:
+            raise serializers.ValidationError(str(exc)) from exc
+        send_optional_email(purpose='password_changed', user=user, request=request)
+        return {'completed': True, 'email': user.email, 'sessions_revoked': True}
 
 
 class VelomaTokenRefreshSerializer(TokenRefreshSerializer):

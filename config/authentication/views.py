@@ -6,6 +6,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from config.common.responses import api_response
 from .models import UserSession
 from .serializers import (
+    FirstAccessSerializer,
     LoginSerializer,
     LogoutAllSerializer,
     LogoutSerializer,
@@ -95,6 +96,21 @@ class PasswordChangeView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return api_response(data=serializer.save(), message='Password changed successfully.')
+
+
+class FirstAccessView(GenericAPIView):
+    """Available to any authenticated user; required before portal access."""
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = FirstAccessSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return api_response(
+            data=serializer.save(),
+            message='Credentials updated. Sign in again with the new ones.',
+        )
 
 
 class VelomaTokenRefreshView(TokenRefreshView):

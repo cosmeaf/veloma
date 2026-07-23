@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    FirstAccessView,
     LoginView,
     LogoutAllView,
     LogoutView,
@@ -29,6 +30,7 @@ urlpatterns = [
     path('token/refresh/', VelomaTokenRefreshView.as_view(), name='token-refresh'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('logout/all/', LogoutAllView.as_view(), name='logout-all'),
+    path('first-access/', FirstAccessView.as_view(), name='first-access'),
     path('me/', MeView.as_view(), name='me'),
     path('sessions/', SessionListView.as_view(), name='sessions'),
     path('sessions/<uuid:session_id>/revoke/', SessionRevokeView.as_view(), name='session-revoke'),

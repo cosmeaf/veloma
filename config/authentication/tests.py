@@ -318,3 +318,98 @@ class AccountLifecycleTests(APITestCase):
 
         grant.refresh_from_db()
         self.assertEqual(grant.status, 'revoked')
+
+
+@override_settings(
+    CELERY_TASK_ALWAYS_EAGER=True,
+    CELERY_TASK_EAGER_PROPAGATES=True,
+    CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}},
+)
+class FirstAccessTests(APITestCase):
+    """Seeded staff accounts must replace the shared credentials before working."""
+
+    TEMPORARY = 'Veloma@2026Veloma@2026'
+
+    @classmethod
+    def setUpTestData(cls):
+        call_command('bootstrap_veloma', verbosity=0)
+        EmailTemplate.objects.update(delivery_mode='sync')
+        security = SecuritySettings.load()
+        security.api_rate_limit_enabled = False
+        security.save()
+
+    def setUp(self):
+        call_command('create_staff_accounts', password=self.TEMPORARY, verbosity=0)
+        self.email = 'cs@velomacontabilidade.com'
+
+    def _login(self, email, password):
+        return self.client.post('/api/auth/login/', {'email': email, 'password': password}, format='json')
+
+    def test_command_creates_every_account_flagged(self):
+        self.assertEqual(User.objects.filter(username__endswith='@velomacontabilidade.com').count(), 11)
+        self.assertEqual(
+            AccountLifecycle.objects.filter(must_change_credentials=True).count(), 11,
+        )
+        manager = User.objects.get(username='veloma@velomacontabilidade.com')
+        self.assertTrue(manager.groups.filter(name='STAFF_MANAGER').exists())
+        self.assertFalse(manager.is_staff)
+        clerk = User.objects.get(username=self.email)
+        self.assertTrue(clerk.groups.filter(name='STAFF').exists())
+
+    def test_login_reports_the_pending_change(self):
+        response = self._login(self.email, self.TEMPORARY)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data['data']['user']['must_change_credentials'])
+
+    def test_portal_is_blocked_until_credentials_change(self):
+        tokens = self._login(self.email, self.TEMPORARY).data['data']
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")
+        blocked = self.client.get('/api/client-portal/clients/')
+        self.assertEqual(blocked.status_code, 403)
+        # The account can still see itself and fix its own credentials.
+        self.assertEqual(self.client.get('/api/auth/me/').status_code, 200)
+
+    def test_first_access_updates_email_and_password(self):
+        tokens = self._login(self.email, self.TEMPORARY).data['data']
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")
+        response = self.client.post('/api/auth/first-access/', {
+            'email': 'ana.cliente@velomacontabilidade.com',
+            'password': 'PessoalForte@2026',
+            'password2': 'PessoalForte@2026',
+        }, format='json')
+        self.assertEqual(response.status_code, 200, response.data)
+
+        user = User.objects.get(pk=tokens['user']['id'] if 'user' in tokens else User.objects.get(email='ana.cliente@velomacontabilidade.com').pk)
+        self.assertEqual(user.username, 'ana.cliente@velomacontabilidade.com')
+        self.assertEqual(user.email, user.username)
+        self.assertFalse(AccountLifecycle.objects.get(user=user).must_change_credentials)
+
+        # Old sessions are gone and the old credentials no longer work.
+        self.client.credentials()
+        self.assertEqual(self._login(self.email, self.TEMPORARY).status_code, 400)
+        fresh = self._login('ana.cliente@velomacontabilidade.com', 'PessoalForte@2026')
+        self.assertEqual(fresh.status_code, 200)
+        self.assertFalse(fresh.data['data']['user']['must_change_credentials'])
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {fresh.data['data']['access']}")
+        self.assertEqual(self.client.get('/api/client-portal/clients/').status_code, 200)
+
+    def test_temporary_password_cannot_be_kept(self):
+        tokens = self._login(self.email, self.TEMPORARY).data['data']
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")
+        response = self.client.post('/api/auth/first-access/', {
+            'email': self.email,
+            'password': self.TEMPORARY,
+            'password2': self.TEMPORARY,
+        }, format='json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_email_already_used_is_refused(self):
+        tokens = self._login(self.email, self.TEMPORARY).data['data']
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")
+        response = self.client.post('/api/auth/first-access/', {
+            'email': 'rh@velomacontabilidade.com',
+            'password': 'PessoalForte@2026',
+            'password2': 'PessoalForte@2026',
+        }, format='json')
+        self.assertEqual(response.status_code, 400)
