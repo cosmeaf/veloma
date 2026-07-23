@@ -72,15 +72,6 @@ def visible_documents(user):
     )
 
 
-def recycled_documents(user):
-    """Documents in the recycle bin (managers only); newest deletions first."""
-    if not is_manager(user):
-        return Document.objects.none()
-    return (
-        Document.objects.select_related('client', 'protocol', 'deleted_by')
-        .filter(status=Document.STATUS_DELETED, purged_at__isnull=True)
-        .order_by('-deleted_at')
-    )
 
 
 def visible_folders(user):

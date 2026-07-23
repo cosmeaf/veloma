@@ -7,7 +7,6 @@ import { FolderExplorer, type Folder } from '@/features/documents/folder-explore
 import { NewFolderForm } from '@/features/documents/new-folder-form';
 import { DocumentUploader } from '@/features/documents/uploader';
 import { authedData } from '@/lib/api/backend';
-import { getCurrentUser, isManager } from '@/lib/auth/session';
 import type { ClientSummary, PortalDocument } from '@/types';
 
 export const metadata: Metadata = { title: 'Documentos' };
@@ -18,8 +17,8 @@ export default async function StaffDocumentsPage({
   searchParams: Promise<{ client?: string; folder?: string }>;
 }) {
   const { client: clientId, folder } = await searchParams;
-  const user = await getCurrentUser();
-  const canDelete = user ? isManager(user) : false;
+  // The whole staff team manages the file area (upload/rename/delete).
+  const canDelete = true;
   const list = await authedData<{ clients: ClientSummary[] }>('/api/client-portal/clients/');
 
   // Files needing attention are shown regardless of the folder being browsed.

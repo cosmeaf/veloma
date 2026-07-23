@@ -57,7 +57,6 @@ from .serializers import (
     ProtocolSubjectSerializer,
     ProtocolTransitionSerializer,
     ProtocolUpdateSerializer,
-    RecycledDocumentSerializer,
     RequirementCreateSerializer,
     RequirementSerializer,
     RequirementUpdateSerializer,
@@ -990,49 +989,75 @@ class DocumentArchiveView(PortalView):
 
 
 class DocumentDeleteView(PortalView):
-    """Manager-only: moves an upload to the recycle bin."""
+    """Staff: permanently deletes an upload (cascade) — Dropbox, storage and DB."""
 
-    permission_classes = [IsStaffManager]
+    permission_classes = [IsPortalStaff]
 
     def post(self, request, document_id):
         document = selectors.visible_documents(request.user).filter(pk=document_id).first()
         if not document:
             return error('Documento não encontrado.', http_status.HTTP_404_NOT_FOUND)
         try:
-            document = DocumentService.delete(
+            DocumentService.delete(document=document, performed_by=request.user, request=request)
+        except ValueError as exc:
+            return error(str(exc))
+        return api_response(message='Documento eliminado.')
+
+
+class DocumentRenameView(PortalView):
+    """Staff: renames a document (and optionally updates its observation)."""
+
+    permission_classes = [IsPortalStaff]
+
+    def post(self, request, document_id):
+        document = selectors.visible_documents(request.user).filter(pk=document_id).first()
+        if not document:
+            return error('Documento não encontrado.', http_status.HTTP_404_NOT_FOUND)
+        try:
+            document = DocumentService.rename(
                 document=document,
+                title=request.data.get('title', ''),
+                note=request.data.get('note'),
                 performed_by=request.user,
-                reason=request.data.get('reason', ''),
                 request=request,
             )
         except ValueError as exc:
             return error(str(exc))
-        return api_response(data={'document': DocumentSerializer(document).data}, message='Documento eliminado.')
+        return api_response(data={'document': DocumentSerializer(document).data}, message='Documento atualizado.')
 
 
-class RecycleListView(PortalView):
-    """Recycle bin: deleted uploads with who/when. Content is manager-scoped by
-    the selector (empty for non-managers); restore stays manager-only."""
+class FolderDeleteView(PortalView):
+    """Staff: permanently deletes a folder and everything inside it (cascade)."""
 
     permission_classes = [IsPortalStaff]
 
-    def get(self, request):
-        documents = selectors.recycled_documents(request.user)
-        return api_response(data={'documents': self.paginate(documents, RecycledDocumentSerializer)})
-
-
-class DocumentRestoreView(PortalView):
-    permission_classes = [IsStaffManager]
-
-    def post(self, request, document_id):
-        document = selectors.recycled_documents(request.user).filter(pk=document_id).first()
-        if not document:
-            return error('Documento não encontrado na reciclagem.', http_status.HTTP_404_NOT_FOUND)
+    def post(self, request, folder_id):
+        folder = selectors.visible_folders(request.user).filter(pk=folder_id).first()
+        if not folder:
+            return error('Pasta não encontrada.', http_status.HTTP_404_NOT_FOUND)
         try:
-            document = DocumentService.restore(document=document, performed_by=request.user, request=request)
+            FolderService.delete(folder=folder, performed_by=request.user, request=request)
         except ValueError as exc:
             return error(str(exc))
-        return api_response(data={'document': DocumentSerializer(document).data}, message='Documento restaurado.')
+        return api_response(message='Pasta eliminada.')
+
+
+class FolderRenameView(PortalView):
+    """Staff: renames a folder."""
+
+    permission_classes = [IsPortalStaff]
+
+    def post(self, request, folder_id):
+        folder = selectors.visible_folders(request.user).filter(pk=folder_id).first()
+        if not folder:
+            return error('Pasta não encontrada.', http_status.HTTP_404_NOT_FOUND)
+        try:
+            folder = FolderService.rename(
+                folder=folder, name=request.data.get('name', ''), performed_by=request.user,
+            )
+        except ValueError as exc:
+            return error(str(exc))
+        return api_response(data={'folder': FolderSerializer(folder).data}, message='Pasta renomeada.')
 
 
 # ------------------------------------------------------------------ dashboards

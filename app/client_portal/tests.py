@@ -441,28 +441,32 @@ class ProtocolTests(ClientPortalTestCase):
 
 
 class DocumentTests(ClientPortalTestCase):
-    def test_delete_recycles_and_restore_brings_back(self):
+    def test_delete_hard_removes_document_and_versions(self):
+        from .models import DocumentVersion
+
         user, _member = self._member()
-        document, _version = DocumentService.upload(
+        document, version = DocumentService.upload(
             client=self.client_record, upload=self._upload(), uploaded_by=user,
         )
-        document.refresh_from_db()
-        self.assertEqual(document.status, Document.STATUS_AVAILABLE)
+        doc_id, version_id = document.id, version.id
 
-        DocumentService.delete(document=document, performed_by=self.manager, reason='duplicado')
-        document.refresh_from_db()
-        self.assertEqual(document.status, Document.STATUS_DELETED)
-        self.assertEqual(document.deleted_by, self.manager)
-        self.assertEqual(document.deletion_reason, 'duplicado')
-        self.assertIsNotNone(document.purge_after)
-        # Hidden from normal listings, visible in the recycle for a manager.
-        self.assertNotIn(document.id, list(selectors.visible_documents(self.manager).values_list('id', flat=True)))
-        self.assertIn(document.id, list(selectors.recycled_documents(self.manager).values_list('id', flat=True)))
+        DocumentService.delete(document=document, performed_by=self.manager)
 
-        DocumentService.restore(document=document, performed_by=self.manager)
-        document.refresh_from_db()
-        self.assertEqual(document.status, Document.STATUS_AVAILABLE)
-        self.assertIsNone(document.purge_after)
+        self.assertFalse(Document.objects.filter(pk=doc_id).exists())
+        self.assertFalse(DocumentVersion.objects.filter(pk=version_id).exists())
+
+    def test_folder_delete_cascades_documents(self):
+        from .models import Document as Doc
+        from .services import FolderService
+
+        user, _member = self._member()
+        folder = FolderService.create(client=self.client_record, name='Temp', created_by=self.manager)
+        DocumentService.upload(
+            client=self.client_record, upload=self._upload(), folder=folder, uploaded_by=user,
+        )
+        FolderService.delete(folder=folder, performed_by=self.manager)
+        self.assertFalse(ClientFolder.objects.filter(pk=folder.id).exists())
+        self.assertEqual(Doc.objects.filter(client=self.client_record).count(), 0)
 
     def test_client_upload_without_protocol_auto_creates_one(self):
         user, _member = self._member()

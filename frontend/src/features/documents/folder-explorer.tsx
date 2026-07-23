@@ -5,6 +5,8 @@ import { DocumentStatusBadge } from '@/components/status';
 import { Badge, Card, CardHeader, EmptyState } from '@/components/ui';
 import { DeleteDocumentButton } from '@/features/documents/delete-document-button';
 import { DownloadButton } from '@/features/documents/download-button';
+import { FolderActions } from '@/features/documents/folder-actions';
+import { RenameDocumentButton } from '@/features/documents/rename-document-button';
 import { formatBytes, formatDateTime } from '@/lib/utils/format';
 import type { PortalDocument } from '@/types';
 
@@ -104,8 +106,8 @@ export function FolderExplorer({
       ) : (
         <ul className="divide-mist/70 divide-y">
           {subfolders.map((folder) => (
-            <li key={folder.id}>
-              <Link href={href(folder.id)} className="hover:bg-mist/30 flex items-center gap-3 px-5 py-3">
+            <li key={folder.id} className="hover:bg-mist/30 flex items-center gap-3 px-5 py-3">
+              <Link href={href(folder.id)} className="flex min-w-0 flex-1 items-center gap-3">
                 {folder.visibility === 'staff_only' ? (
                   <FolderLock className="text-navy/50 size-4.5 shrink-0" aria-hidden />
                 ) : folder.folder_type === 'protocol' ? (
@@ -113,10 +115,11 @@ export function FolderExplorer({
                 ) : (
                   <Folder className="text-gold-sun size-4.5 shrink-0" aria-hidden />
                 )}
-                <span className="text-navy flex-1 text-sm font-medium">{folder.name}</span>
+                <span className="text-navy truncate text-sm font-medium">{folder.name}</span>
                 {folder.visibility === 'staff_only' ? <Badge tone="warning">Interna</Badge> : null}
-                <ChevronRight className="text-navy/30 size-4" aria-hidden />
               </Link>
+              {canDelete ? <FolderActions folderId={folder.id} name={folder.name} /> : null}
+              <ChevronRight className="text-navy/30 size-4 shrink-0" aria-hidden />
             </li>
           ))}
 
@@ -141,7 +144,8 @@ export function FolderExplorer({
               <div className="flex items-center gap-2">
                 <DocumentStatusBadge status={document.status} />
                 {document.status === 'available' ? <DownloadButton documentId={document.id} /> : null}
-                {canDelete ? <DeleteDocumentButton documentId={document.id} /> : null}
+                {canDelete ? <RenameDocumentButton documentId={document.id} title={document.title} /> : null}
+                {canDelete ? <DeleteDocumentButton documentId={document.id} title={document.title} /> : null}
               </div>
             </li>
           ))}

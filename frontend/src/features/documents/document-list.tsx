@@ -47,7 +47,7 @@ export function DocumentList({
               <div className="flex items-center gap-2">
                 <DocumentStatusBadge status={document.status} />
                 {document.status === 'available' ? <DownloadButton documentId={document.id} /> : null}
-                {canDelete ? <DeleteDocumentButton documentId={document.id} /> : null}
+                {canDelete ? <DeleteDocumentButton documentId={document.id} title={document.title} /> : null}
               </div>
             </li>
           ))}

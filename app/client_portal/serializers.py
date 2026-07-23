@@ -311,19 +311,6 @@ class DocumentSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class RecycledDocumentSerializer(serializers.ModelSerializer):
-    client_name = serializers.CharField(source='client.legal_name', read_only=True)
-    protocol_number = serializers.CharField(source='protocol.number', read_only=True, default=None)
-
-    class Meta:
-        model = Document
-        fields = (
-            'id', 'title', 'client_name', 'protocol_number', 'deleted_at',
-            'deleted_by_name_snapshot', 'deletion_reason', 'purge_after',
-        )
-        read_only_fields = fields
-
-
 class DocumentUploadSerializer(serializers.Serializer):
     file = serializers.FileField()
     client = serializers.UUIDField(required=False)
