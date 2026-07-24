@@ -4,6 +4,7 @@ import {
   FolderTree,
   LayoutDashboard,
   ShieldCheck,
+  Sparkles,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -45,7 +46,10 @@ export const STAFF_NAVIGATION: NavSection[] = [
   },
   {
     title: 'Conta',
-    links: [{ href: '/staff/seguranca', label: 'Segurança', icon: ShieldCheck }],
+    links: [
+      { href: '/staff/seguranca', label: 'Segurança', icon: ShieldCheck },
+      { href: '/staff/novidades', label: 'Novidades', icon: Sparkles },
+    ],
   },
 ];
 
@@ -63,6 +67,7 @@ export const CLIENT_NAVIGATION: NavSection[] = [
     links: [
       { href: '/dashboard/empresa', label: 'Empresa', icon: Users, tour: 'empresa' },
       { href: '/dashboard/seguranca', label: 'Segurança', icon: ShieldCheck, tour: 'seguranca' },
+      { href: '/dashboard/novidades', label: 'Novidades', icon: Sparkles },
     ],
   },
 ];

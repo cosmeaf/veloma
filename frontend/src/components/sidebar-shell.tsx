@@ -9,8 +9,9 @@ import { VelomaMark, VelomaSymbol } from '@/components/brand';
 import { HeaderActions } from '@/components/header-actions';
 import { LogoutButton } from '@/components/logout-button';
 import { cn } from '@/components/ui';
-import { site } from '@/content/site';
 import { NAVIGATION_BY_AREA, isActive, type Area } from '@/config/navigation';
+import { APP_VERSION } from '@/content/changelog';
+import { site } from '@/content/site';
 
 const COLLAPSE_KEY = 'veloma:sidebar:collapsed';
 
@@ -37,6 +38,7 @@ export function SidebarShell({
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const sections = NAVIGATION_BY_AREA[area];
+  const novidadesHref = area === 'staff' ? '/staff/novidades' : '/dashboard/novidades';
 
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
@@ -120,6 +122,16 @@ export function SidebarShell({
           <ChevronLeft className={cn('size-4 transition-transform', collapsed && 'rotate-180')} />
           {!collapsed ? 'Recolher' : null}
         </button>
+        <Link
+          href={novidadesHref}
+          title={`Versão v${APP_VERSION} — ver novidades`}
+          className={cn(
+            'text-ivory/45 hover:bg-white/10 hover:text-ivory flex items-center border-t border-white/10 py-2 text-xs',
+            collapsed ? 'justify-center px-2' : 'px-4',
+          )}
+        >
+          v{APP_VERSION}
+        </Link>
         <div className={cn('flex items-center gap-2 border-t border-white/10 py-3', collapsed ? 'justify-center px-2' : 'justify-between px-4')}>
           {!collapsed ? <p className="text-ivory/70 min-w-0 flex-1 truncate text-sm">{userName}</p> : null}
           <LogoutButton onNavy iconOnly={collapsed} />
@@ -138,6 +150,12 @@ export function SidebarShell({
               </button>
             </div>
             {nav(false)}
+            <Link
+              href={novidadesHref}
+              className="text-ivory/45 hover:bg-white/10 hover:text-ivory border-t border-white/10 px-4 py-2 text-xs"
+            >
+              Versão v{APP_VERSION} — novidades
+            </Link>
             <div className="flex items-center justify-between gap-2 border-t border-white/10 px-4 py-3">
               <p className="text-ivory/70 min-w-0 flex-1 truncate text-sm">{userName}</p>
               <LogoutButton onNavy />
