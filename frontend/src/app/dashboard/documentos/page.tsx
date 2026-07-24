@@ -43,6 +43,7 @@ export default async function DocumentsPage({
         documents={documents.documents}
         currentId={folder ?? null}
         basePath="/dashboard/documentos"
+        rootName={client.legal_name}
       />
       <DocumentUploader clientId={client.id} folderId={folder} zipOnly />
     </>

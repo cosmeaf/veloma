@@ -85,6 +85,7 @@ export default async function StaffDocumentsPage({
         query={`client=${clientId}`}
         action={<NewFolderForm clientId={clientId} parentId={folder ?? null} />}
         canDelete={canDelete}
+        rootName={current?.legal_name ?? 'Início'}
       />
       <DocumentUploader clientId={clientId} folderId={folder} />
     </>

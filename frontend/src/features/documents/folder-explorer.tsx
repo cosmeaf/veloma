@@ -29,8 +29,9 @@ export type Crumb = { id: string | null; name: string };
 /** Documents older than this drop into the collapsed "Histórico" section. */
 const HISTORY_DAYS = 90;
 
-/** Walks the parent chain so the breadcrumb needs no extra requests. */
-export function buildBreadcrumbs(folders: Folder[], currentId: string | null): Crumb[] {
+/** Walks the parent chain so the breadcrumb needs no extra requests. The root
+ * is the client's own name (its home folder), not a static label. */
+export function buildBreadcrumbs(folders: Folder[], currentId: string | null, rootName = 'Início'): Crumb[] {
   const byId = new Map(folders.map((folder) => [folder.id, folder]));
   const crumbs: Crumb[] = [];
   let cursor = currentId ? byId.get(currentId) : undefined;
@@ -38,7 +39,7 @@ export function buildBreadcrumbs(folders: Folder[], currentId: string | null): C
     crumbs.unshift({ id: cursor.id, name: cursor.name });
     cursor = cursor.parent ? byId.get(cursor.parent) : undefined;
   }
-  return [{ id: null, name: 'Raiz' }, ...crumbs];
+  return [{ id: null, name: rootName }, ...crumbs];
 }
 
 export function childrenOf(folders: Folder[], parentId: string | null): Folder[] {
@@ -63,6 +64,7 @@ export function FolderExplorer({
   query = '',
   action,
   canDelete = false,
+  rootName = 'Início',
 }: {
   folders: Folder[];
   documents: PortalDocument[];
@@ -72,8 +74,10 @@ export function FolderExplorer({
   action?: React.ReactNode;
   /** Staff management (rename/delete). Clients only download. */
   canDelete?: boolean;
+  /** Label for the root crumb — the client's own name. */
+  rootName?: string;
 }) {
-  const crumbs = buildBreadcrumbs(folders, currentId);
+  const crumbs = buildBreadcrumbs(folders, currentId, rootName);
   const subfolders = childrenOf(folders, currentId);
 
   const href = (folderId: string | null) => {
