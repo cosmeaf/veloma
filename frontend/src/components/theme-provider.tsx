@@ -64,11 +64,15 @@ export function ThemeProvider({
       const gain = ctx.createGain();
       oscillator.connect(gain);
       gain.connect(ctx.destination);
-      oscillator.frequency.value = 880;
-      gain.gain.setValueAtTime(0.05, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+      // A clearer, louder two-note chime (was a faint single beep at 0.05).
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(660, ctx.currentTime);
+      oscillator.frequency.setValueAtTime(990, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
       oscillator.start();
-      oscillator.stop(ctx.currentTime + 0.25);
+      oscillator.stop(ctx.currentTime + 0.4);
     } catch {
       // Autoplay policies may block this; silence is acceptable.
     }

@@ -10,7 +10,9 @@ def _staff_groups(user):
     return set(user.groups.values_list('name', flat=True))
 
 
-def build_notifications(user, *, limit=20):
+def build_notifications(user, *, limit=20, since=None):
+    """Feed of recent activity. ``since`` (the user's cleared_at) hides anything
+    the user has cleared, so "apagar tudo" empties the list."""
     from app.client_portal.models import ClientPortalActivity, ProtocolEvent
     from app.client_portal.selectors import is_staff_member, visible_clients, visible_protocols
 
@@ -18,11 +20,10 @@ def build_notifications(user, *, limit=20):
 
     if is_staff_member(user):
         clients = visible_clients(user)
-        activities = (
-            ClientPortalActivity.objects.filter(client__in=clients)
-            .exclude(actor=user)
-            .order_by('-created_at')[:limit]
-        )
+        activities = ClientPortalActivity.objects.filter(client__in=clients).exclude(actor=user)
+        if since is not None:
+            activities = activities.filter(created_at__gt=since)
+        activities = activities.order_by('-created_at')[:limit]
         for activity in activities:
             items.append({
                 'id': str(activity.id),
@@ -33,15 +34,13 @@ def build_notifications(user, *, limit=20):
             })
     else:
         protocols = visible_protocols(user)
-        events = (
-            ProtocolEvent.objects.filter(
-                protocol__in=protocols,
-                event_type__in=ProtocolEvent.CLIENT_VISIBLE,
-            )
-            .exclude(actor=user)
-            .select_related('protocol')
-            .order_by('-created_at')[:limit]
-        )
+        events = ProtocolEvent.objects.filter(
+            protocol__in=protocols,
+            event_type__in=ProtocolEvent.CLIENT_VISIBLE,
+        ).exclude(actor=user)
+        if since is not None:
+            events = events.filter(created_at__gt=since)
+        events = events.select_related('protocol').order_by('-created_at')[:limit]
         for event in events:
             items.append({
                 'id': str(event.id),

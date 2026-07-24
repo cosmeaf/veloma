@@ -62,7 +62,11 @@ export function DocumentUploader({
       if (!ok) setError(payload.message ?? 'O envio falhou.');
     }
     setNote('');
+    // The file shows up immediately, but the antivirus scan finishes a few
+    // seconds later (in the background); refresh a few more times so the status
+    // flips from "Em análise" to "Disponível" on its own — no manual reload.
     router.refresh();
+    [2000, 5000, 10000].forEach((ms) => window.setTimeout(() => router.refresh(), ms));
   }
 
   return (

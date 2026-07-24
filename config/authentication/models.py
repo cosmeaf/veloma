@@ -265,6 +265,7 @@ class AccountLifecycle(models.Model):
     theme = models.CharField(max_length=8, choices=(('light', 'Light'), ('dark', 'Dark')), default='light')
     sound_enabled = models.BooleanField(default=True)
     notifications_seen_at = models.DateTimeField(blank=True, null=True)
+    notifications_cleared_at = models.DateTimeField(blank=True, null=True)
     credentials_updated_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 

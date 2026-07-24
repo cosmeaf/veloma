@@ -170,7 +170,7 @@ class NotificationsView(GenericAPIView):
         from .notifications import build_notifications
 
         record, _ = _lifecycle(request.user)
-        items = build_notifications(request.user, limit=20)
+        items = build_notifications(request.user, limit=20, since=record.notifications_cleared_at)
         seen_at = record.notifications_seen_at
         unread = sum(1 for item in items if seen_at is None or item['created_at'] > seen_at)
         return api_response(data={'notifications': items, 'unread': unread})
@@ -183,6 +183,17 @@ class NotificationsView(GenericAPIView):
         record.notifications_seen_at = timezone.now()
         record.save(update_fields=('notifications_seen_at',))
         return api_response(data={'unread': 0}, message='Notificações marcadas como lidas.')
+
+    def delete(self, request):
+        # Clear all: hide everything up to now from the feed.
+        from django.utils import timezone
+
+        now = timezone.now()
+        record, _ = _lifecycle(request.user)
+        record.notifications_cleared_at = now
+        record.notifications_seen_at = now
+        record.save(update_fields=('notifications_cleared_at', 'notifications_seen_at'))
+        return api_response(data={'notifications': [], 'unread': 0}, message='Notificações apagadas.')
 
 
 def _lifecycle(user):

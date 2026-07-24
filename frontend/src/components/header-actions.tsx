@@ -51,6 +51,17 @@ export function HeaderActions() {
     }
   }
 
+  async function markAllRead() {
+    await fetch('/api/portal/notifications', { method: 'POST' });
+    setUnread(0);
+  }
+
+  async function clearAll() {
+    await fetch('/api/portal/notifications', { method: 'DELETE' });
+    setItems([]);
+    setUnread(0);
+  }
+
   const iconBtn = 'relative rounded-lg p-2 text-ivory/80 hover:bg-white/10 hover:text-ivory transition-colors';
 
   return (
@@ -84,6 +95,16 @@ export function HeaderActions() {
                 ))
               )}
             </ul>
+            {items.length ? (
+              <div className="border-mist flex items-center justify-between border-t px-4 py-2">
+                <button type="button" onClick={markAllRead} className="text-navy/70 hover:text-navy text-xs font-medium">
+                  Marcar como lido
+                </button>
+                <button type="button" onClick={clearAll} className="text-xs font-medium text-red-600 hover:text-red-700">
+                  Apagar tudo
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
