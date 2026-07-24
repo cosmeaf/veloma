@@ -887,19 +887,14 @@ class ProtocolService:
 
     @classmethod
     def auto_protocol(cls, *, client, uploaded_by=None, request=None):
-        """Returns a protocol to attach an upload to when none was given.
+        """Opens a fresh protocol for a client submission when none was given.
 
-        Reuses the client's current open request (waiting for documents) so a
-        submission's files stay together; otherwise opens one automatically with
-        the default subject. Never leaves a document without a protocol.
+        Each submission gets its own protocol — its own number and state — so a
+        protocol always means one request. Files from separate submissions never
+        pile into the same open drawer, and staff/clients can always tell which
+        submission a state change refers to. Never leaves a document without a
+        protocol.
         """
-        existing = (
-            Protocol.objects.filter(client=client, status=Protocol.STATUS_WAITING_DOCUMENTS)
-            .order_by('-created_at')
-            .first()
-        )
-        if existing:
-            return existing
         from .models import ProtocolSubject
 
         subject = ProtocolSubject.objects.filter(active=True).order_by('order', 'name').first()
