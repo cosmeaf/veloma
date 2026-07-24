@@ -65,6 +65,9 @@ export function FolderExplorer({
   action,
   canDelete = false,
   rootName = 'Início',
+  title = 'Ficheiros',
+  description = 'Envie, descarregue e organize — como no seu computador.',
+  showBreadcrumb = true,
 }: {
   folders: Folder[];
   documents: PortalDocument[];
@@ -76,6 +79,11 @@ export function FolderExplorer({
   canDelete?: boolean;
   /** Label for the root crumb — the client's own name. */
   rootName?: string;
+  /** Card header overrides (a single-protocol view has no folder tree). */
+  title?: string;
+  description?: string;
+  /** Hidden when there is no folder tree to navigate (e.g. one protocol). */
+  showBreadcrumb?: boolean;
 }) {
   const crumbs = buildBreadcrumbs(folders, currentId, rootName);
   const subfolders = childrenOf(folders, currentId);
@@ -96,26 +104,24 @@ export function FolderExplorer({
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader
-        title="Ficheiros"
-        description="Envie, descarregue e organize — como no seu computador."
-        action={action}
-      />
+      <CardHeader title={title} description={description} action={action} />
 
-      <nav aria-label="Caminho" className="border-mist flex flex-wrap items-center gap-1 border-b px-5 py-2.5 text-sm">
-        {crumbs.map((crumb, index) => (
-          <span key={crumb.id ?? 'root'} className="flex items-center gap-1">
-            {index > 0 ? <ChevronRight className="text-navy/30 size-3.5" aria-hidden /> : null}
-            {index === crumbs.length - 1 ? (
-              <span className="text-navy font-medium">{crumb.name}</span>
-            ) : (
-              <Link href={href(crumb.id)} className="text-navy/60 hover:text-navy hover:underline">
-                {crumb.name}
-              </Link>
-            )}
-          </span>
-        ))}
-      </nav>
+      {showBreadcrumb ? (
+        <nav aria-label="Caminho" className="border-mist flex flex-wrap items-center gap-1 border-b px-5 py-2.5 text-sm">
+          {crumbs.map((crumb, index) => (
+            <span key={crumb.id ?? 'root'} className="flex items-center gap-1">
+              {index > 0 ? <ChevronRight className="text-navy/30 size-3.5" aria-hidden /> : null}
+              {index === crumbs.length - 1 ? (
+                <span className="text-navy font-medium">{crumb.name}</span>
+              ) : (
+                <Link href={href(crumb.id)} className="text-navy/60 hover:text-navy hover:underline">
+                  {crumb.name}
+                </Link>
+              )}
+            </span>
+          ))}
+        </nav>
+      ) : null}
 
       {empty ? (
         <EmptyState title="Pasta vazia" description="Arraste ficheiros para enviar ou crie uma pasta." />

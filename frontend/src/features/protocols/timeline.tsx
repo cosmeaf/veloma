@@ -9,15 +9,27 @@ function describe(event: TimelineEvent): string | null {
   return event.new_value || null;
 }
 
+/**
+ * After the antivirus scan the backend records a second `document_uploaded`
+ * event with no actor whose value is just the file status ("available") — a
+ * system echo that duplicates the real upload line. Hide it so each upload
+ * shows once.
+ */
+function isSystemUploadEcho(event: TimelineEvent): boolean {
+  return event.event_type === 'document_uploaded' && !event.actor_name_snapshot;
+}
+
 export function ProtocolTimeline({ events }: { events: TimelineEvent[] }) {
+  const visible = events.filter((event) => !isSystemUploadEcho(event));
+
   return (
     <Card>
       <CardHeader title="Histórico" description="Cada alteração fica registada." />
-      {events.length === 0 ? (
+      {visible.length === 0 ? (
         <EmptyState title="Sem registos" />
       ) : (
         <ol className="divide-y divide-mist/70">
-          {events.map((event) => (
+          {visible.map((event) => (
             <li key={event.id} className="flex items-start justify-between gap-4 px-5 py-3">
               <div>
                 <p className="text-sm font-medium text-navy">{label(EVENT_LABELS, event.event_type)}</p>

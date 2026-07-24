@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { PageHeader } from '@/components/ui';
-import { DocumentList } from '@/features/documents/document-list';
+import { FolderExplorer } from '@/features/documents/folder-explorer';
 import { DocumentUploader } from '@/features/documents/uploader';
 import { BackendError, authedData } from '@/lib/api/backend';
 import type { PortalDocument, Protocol } from '@/types';
@@ -38,8 +38,17 @@ export default async function ProtocolDetailPage({ params }: { params: Promise<{
 
       <PageHeader title={protocol.title} description="Envie e descarregue os ficheiros deste envio." />
 
+      <FolderExplorer
+        folders={[]}
+        documents={documents.documents}
+        currentId={null}
+        basePath={`/dashboard/protocolos/${id}`}
+        rootName={protocol.number}
+        title="Ficheiros"
+        description="Ficheiros deste envio."
+        showBreadcrumb={false}
+      />
       {open ? <DocumentUploader protocolId={id} zipOnly /> : null}
-      <DocumentList documents={documents.documents} description="Ficheiros deste envio." />
     </>
   );
 }

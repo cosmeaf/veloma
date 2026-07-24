@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 
 import { ProtocolStatusBadge } from '@/components/status';
 import { Badge, Card, PageHeader } from '@/components/ui';
-import { DocumentList } from '@/features/documents/document-list';
+import { FolderExplorer } from '@/features/documents/folder-explorer';
 import { DocumentUploader } from '@/features/documents/uploader';
 import { CommentThread } from '@/features/protocols/comment-thread';
 import { ProtocolActions } from '@/features/protocols/protocol-actions';
@@ -40,6 +40,17 @@ export default async function StaffProtocolDetailPage({ params }: { params: Prom
 
   const open = !['completed', 'cancelled', 'archived'].includes(protocol.status);
 
+  // Only surface metadata that is actually filled — empty "—" fields are noise.
+  const competence =
+    protocol.competence_month && protocol.competence_year
+      ? `${String(protocol.competence_month).padStart(2, '0')}/${protocol.competence_year}`
+      : null;
+  const meta = [
+    { label: 'Prazo', value: protocol.due_date ? formatDate(protocol.due_date) : null },
+    { label: 'Competência', value: competence },
+    { label: 'Concluído', value: protocol.completed_at ? formatDate(protocol.completed_at) : null },
+  ].filter((item) => item.value);
+
   return (
     <>
       <Link href="/staff/protocolos" className="inline-flex items-center gap-1.5 text-sm text-navy/55 hover:text-navy">
@@ -66,34 +77,38 @@ export default async function StaffProtocolDetailPage({ params }: { params: Prom
         </Card>
       ) : null}
 
-      <dl className="grid gap-4 sm:grid-cols-3">
-        <Card className="p-4">
-          <dt className="text-xs tracking-wide text-navy/55 uppercase">Prazo</dt>
-          <dd className="mt-1 text-sm font-medium text-navy">{formatDate(protocol.due_date)}</dd>
-        </Card>
-        <Card className="p-4">
-          <dt className="text-xs tracking-wide text-navy/55 uppercase">Competência</dt>
-          <dd className="mt-1 text-sm font-medium text-navy">
-            {protocol.competence_month && protocol.competence_year
-              ? `${String(protocol.competence_month).padStart(2, '0')}/${protocol.competence_year}`
-              : '—'}
-          </dd>
-        </Card>
-        <Card className="p-4">
-          <dt className="text-xs tracking-wide text-navy/55 uppercase">Concluído em</dt>
-          <dd className="mt-1 text-sm font-medium text-navy">{formatDate(protocol.completed_at)}</dd>
-        </Card>
-      </dl>
+      {meta.length ? (
+        <dl className="flex flex-wrap gap-x-8 gap-y-1 text-sm">
+          {meta.map((item) => (
+            <div key={item.label} className="flex items-baseline gap-2">
+              <dt className="text-navy/50">{item.label}</dt>
+              <dd className="font-medium text-navy">{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
-          <ProtocolActions protocolId={id} status={protocol.status} isManager={user ? isManager(user) : false} />
-          <RequirementChecklist requirements={requirements.requirements} />
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <FolderExplorer
+            folders={[]}
+            documents={documents.documents}
+            currentId={null}
+            basePath={`/staff/protocolos/${id}`}
+            rootName={protocol.number}
+            title="Ficheiros"
+            description="Ficheiros deste protocolo."
+            showBreadcrumb={false}
+            canDelete
+          />
           {open ? <DocumentUploader protocolId={id} /> : null}
-          <DocumentList documents={documents.documents} description="Ficheiros deste protocolo." />
+          <CommentThread protocolId={id} comments={comments.comments} canComment canWriteInternal />
         </div>
         <div className="space-y-6">
-          <CommentThread protocolId={id} comments={comments.comments} canComment canWriteInternal />
+          <ProtocolActions protocolId={id} status={protocol.status} isManager={user ? isManager(user) : false} />
+          {requirements.requirements.length ? (
+            <RequirementChecklist requirements={requirements.requirements} />
+          ) : null}
           <ProtocolTimeline events={timeline.timeline} />
         </div>
       </div>
