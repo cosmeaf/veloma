@@ -3,44 +3,34 @@ import Image from 'next/image';
 import { cn } from '@/components/ui';
 
 /**
- * Brand assets.
+ * Brand assets — the client's own logo signature ("V ELOMA — Contabilidade e
+ * Consultoria Fiscal LDA", navy with gold accents).
  *
- * The manual forbids recomposing the logomark with live text, so the full
- * signature is always the vector file. The symbol below is the same vector
- * geometry, rendered flat: the metallic version may not be used under 48 px,
- * and at small sizes the gold reads as "ouro sol" (#B87F07) on light
- * backgrounds and "ouro alto" (#F3D994) on dark ones.
+ * The artwork is dark on a transparent background, so it only reads on light
+ * surfaces. On dark surfaces (the navy sidebar, the login panel) it sits on a
+ * light chip so it stays legible — `tone="dark"` switches that on.
  */
-const SYMBOL_PATHS = [
-  'M 7.52 22.00 L 28.48 22.00 L 59.55 88.81 L 56.45 127.19 Z',
-  'M 56.45 127.19 L 59.55 88.81 L 90.77 11.50 L 109.23 -3.50 Z',
-];
+const LOGO_SRC = '/logo_veloma.png';
+const LOGO_ALT = 'Veloma — Contabilidade e Consultoria Fiscal';
 
+/** Compact square emblem — used as the collapsed sidebar icon. */
 export function VelomaSymbol({
   className,
   tone = 'light',
-  title = 'Veloma',
+  title = LOGO_ALT,
 }: {
   className?: string;
   tone?: 'light' | 'dark';
   title?: string;
 }) {
   return (
-    <svg
-      viewBox="0 -6 117 136"
-      role="img"
-      aria-label={title}
-      className={cn('h-6 w-auto shrink-0', className)}
-      fill={tone === 'dark' ? '#F3D994' : '#B87F07'}
-    >
-      {SYMBOL_PATHS.map((d) => (
-        <path key={d} d={d} />
-      ))}
-    </svg>
+    <span className={cn('inline-flex shrink-0 items-center justify-center', tone === 'dark' && 'rounded-md bg-white p-0.5')}>
+      <Image src={LOGO_SRC} alt={title} width={64} height={64} className={cn('h-6 w-auto', className)} />
+    </span>
   );
 }
 
-/** Full vertical signature. Never below 140 px wide, per the manual. */
+/** Full signature — used on the login panel and the landing hero. */
 export function VelomaLogomark({
   tone = 'light',
   width = 200,
@@ -53,33 +43,19 @@ export function VelomaLogomark({
   priority?: boolean;
 }) {
   return (
-    <Image
-      src={tone === 'dark' ? '/veloma-logomarca-negativo.svg' : '/veloma-logomarca.svg'}
-      alt="Veloma — Contabilidade e Consultoria Fiscal"
-      width={width}
-      height={Math.round((width * 518) / 776)}
-      className={className}
-      priority={priority}
-      // The optimizer refuses SVG unless `dangerouslyAllowSVG` is on; the
-      // logomark is a trusted local asset and is served as-is.
-      unoptimized
-    />
+    <span className={cn('inline-flex', tone === 'dark' && 'rounded-2xl bg-white p-4 shadow-sm', className)}>
+      <Image src={LOGO_SRC} alt={LOGO_ALT} width={width} height={width} priority={priority} className="h-auto w-full" />
+    </span>
   );
 }
 
-/** Compact lockup for headers: flat symbol plus the wordmark set in Cinzel. */
+/** Compact lockup for headers. */
 export function VelomaMark({ tone = 'light', className }: { tone?: 'light' | 'dark'; className?: string }) {
   return (
-    <span className={cn('flex items-center gap-2', className)}>
-      <VelomaSymbol tone={tone} className="h-5" />
-      <span
-        className={cn(
-          'font-display text-sm font-semibold tracking-[0.16em] uppercase',
-          tone === 'dark' ? 'text-ivory' : 'text-navy',
-        )}
-      >
-        Veloma
-      </span>
+    <span
+      className={cn('inline-flex items-center', tone === 'dark' && 'rounded-lg bg-white px-1.5 py-1', className)}
+    >
+      <Image src={LOGO_SRC} alt={LOGO_ALT} width={80} height={80} className="h-8 w-auto" priority />
     </span>
   );
 }
