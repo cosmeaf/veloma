@@ -149,6 +149,11 @@ if MINIO_ENABLED:
     AWS_S3_FILE_OVERWRITE = False
     AWS_S3_USE_SSL = env_bool('MINIO_USE_SSL', False)
     AWS_S3_VERIFY = env_bool('MINIO_VERIFY_SSL', False)
+    # Browser-reachable object-storage host. Internal reads/writes keep using the
+    # internal endpoint above; only the host of the download URL handed to the
+    # browser is rewritten to this public subdomain (e.g. https://s3.veloma.app).
+    # Safe because the presigned signature (SigV2) does not cover the host.
+    MINIO_PUBLIC_URL = env('MINIO_PUBLIC_URL', '')
 
 # Dropbox mirror configuration lives in the DropboxSettings singleton (Admin →
 # Configuration), like the email vendor credentials — never in settings.py.

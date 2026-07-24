@@ -61,10 +61,34 @@ class StorageService:
         """Short-lived signed URL. Never store or reuse the returned value."""
         storage = cls._storage()
         try:
-            return storage.url(key, expire=expires_in)
+            url = storage.url(key, expire=expires_in)
         except TypeError:
             # The filesystem backend has no expiring URLs.
-            return storage.url(key)
+            url = storage.url(key)
+        return cls._to_public_host(url)
+
+    @staticmethod
+    def _to_public_host(url):
+        """Swaps the object-storage host for the browser-reachable one.
+
+        MinIO signs with the internal Docker host, which the browser cannot
+        reach. When `MINIO_PUBLIC_URL` is set we rewrite scheme+host to that
+        public subdomain; the presigned SigV2 signature covers the path and
+        expiry but not the host, so the rewritten URL still validates.
+        """
+        public = getattr(settings, 'MINIO_PUBLIC_URL', '') or ''
+        if not public:
+            return url
+        from urllib.parse import urlsplit, urlunsplit
+
+        pub, parts = urlsplit(public), urlsplit(url)
+        return urlunsplit((
+            pub.scheme or parts.scheme,
+            pub.netloc or parts.netloc,
+            parts.path,
+            parts.query,
+            parts.fragment,
+        ))
 
     @classmethod
     def metadata(cls, key):
