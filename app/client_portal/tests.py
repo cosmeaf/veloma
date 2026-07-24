@@ -506,6 +506,23 @@ class DocumentTests(ClientPortalTestCase):
         document2.refresh_from_db()
         self.assertNotEqual(document2.protocol_id, document.protocol_id)
 
+    def test_staff_upload_without_folder_or_protocol_gets_a_protocol(self):
+        # A bare staff upload (no protocol, no folder) must never be orphaned.
+        document, _v = DocumentService.upload(
+            client=self.client_record, upload=self._upload(), uploaded_by=self.staff, is_staff=True,
+        )
+        document.refresh_from_db()
+        self.assertIsNotNone(document.protocol_id)
+
+    def test_staff_upload_into_a_folder_keeps_folder_filing(self):
+        folder = FolderService.create(client=self.client_record, name='Arquivo', created_by=self.staff)
+        document, _v = DocumentService.upload(
+            client=self.client_record, upload=self._upload(), folder=folder,
+            uploaded_by=self.staff, is_staff=True,
+        )
+        document.refresh_from_db()
+        self.assertIsNone(document.protocol_id)
+
     def test_upload_creates_document_and_version(self):
         user, _member = self._member()
         protocol = self._protocol()

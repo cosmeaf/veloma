@@ -1182,10 +1182,11 @@ class DocumentService:
             raise ValueError('Uploads are blocked for inactive clients.')
         if protocol is not None and not protocol.is_open:
             raise ValueError('This protocol is closed for new documents.')
-        # A client submission always gets a protocol number: reuse the open
-        # request or open one automatically, so nothing is filed "sem protocolo".
-        # Staff filing internally to a folder keeps its current behaviour.
-        if protocol is None and not is_staff:
+        # Nothing is filed "sem protocolo": a client submission, or a staff
+        # upload that targets no folder, opens a protocol automatically. Only a
+        # staff upload filed explicitly into a folder keeps folder-based
+        # organisation without a protocol.
+        if protocol is None and (not is_staff or folder is None):
             protocol = ProtocolService.auto_protocol(client=client, uploaded_by=uploaded_by, request=request)
         name, extension = cls.validate_upload(
             upload=upload, client=client, protocol=protocol, is_staff=is_staff,
