@@ -131,6 +131,7 @@ export function FolderExplorer({
                   <p className="text-navy truncate text-sm font-medium">{document.title}</p>
                   <p className="text-navy/55 mt-0.5 text-xs">
                     {[
+                      document.protocol_number,
                       document.uploader_name_snapshot,
                       document.current_version ? `v${document.current_version.version_number}` : null,
                       document.current_version ? formatBytes(document.current_version.size) : null,

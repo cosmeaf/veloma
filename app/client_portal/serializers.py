@@ -300,11 +300,12 @@ class DocumentVersionSerializer(serializers.ModelSerializer):
 class DocumentSerializer(serializers.ModelSerializer):
     current_version = DocumentVersionSerializer(read_only=True)
     client_name = serializers.CharField(source='client.legal_name', read_only=True)
+    protocol_number = serializers.CharField(source='protocol.number', read_only=True, default=None)
 
     class Meta:
         model = Document
         fields = (
-            'id', 'client', 'client_name', 'protocol', 'folder', 'title', 'original_name',
+            'id', 'client', 'client_name', 'protocol', 'protocol_number', 'folder', 'title', 'original_name',
             'category', 'status', 'visibility', 'uploader_name_snapshot', 'current_version',
             'rejection_reason', 'note', 'archived_at', 'created_at',
         )

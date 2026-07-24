@@ -1197,9 +1197,9 @@ class DocumentService:
         )
         checksum, content_type, detected = cls._checksum_and_mime(upload)
 
-        # Keep the explorer meaningful: every protocol upload lands in a folder.
-        if folder is None and protocol is not None:
-            folder = FolderService.ensure_protocol_folder(protocol=protocol, created_by=uploaded_by)
+        # No physical protocol folders: organisation by protocol is dynamic (the
+        # document keeps its protocol link and shows the number). Staff still file
+        # into folders they create explicitly.
 
         document = Document.objects.create(
             client=client,

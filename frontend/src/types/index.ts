@@ -162,6 +162,7 @@ export type PortalDocument = {
   client_name: string;
   protocol: string | null;
   folder: string | null;
+  protocol_number?: string | null;
   title: string;
   original_name: string;
   category: string;

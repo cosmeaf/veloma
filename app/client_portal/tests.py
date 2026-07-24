@@ -748,7 +748,9 @@ class UploadPolicyTests(ClientPortalTestCase):
         }, format='multipart')
         self.assertEqual(accepted.status_code, 201, accepted.data)
 
-    def test_protocol_uploads_land_in_a_folder(self):
+    def test_protocol_uploads_have_no_physical_folder(self):
+        # Organisation by protocol is dynamic: the document links to the protocol
+        # but no physical folder is auto-created.
         user, _member = self._member()
         protocol = self._protocol()
         document, _version = DocumentService.upload(
@@ -758,9 +760,8 @@ class UploadPolicyTests(ClientPortalTestCase):
             uploaded_by=user,
             is_staff=False,
         )
-        self.assertIsNotNone(document.folder)
-        self.assertEqual(document.folder.client_id, self.client_record.id)
-        self.assertIn(protocol.number, document.folder.path)
+        self.assertIsNone(document.folder)
+        self.assertEqual(document.protocol_id, protocol.id)
 
 
 class FolderVisibilityTests(ClientPortalTestCase):

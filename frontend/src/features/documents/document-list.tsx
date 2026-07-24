@@ -29,6 +29,7 @@ export function DocumentList({
                 <p className="truncate text-sm font-medium text-navy">{document.title}</p>
                 <p className="mt-0.5 text-xs text-navy/55">
                   {[
+                    document.protocol_number,
                     document.uploader_name_snapshot,
                     document.current_version ? `v${document.current_version.version_number}` : null,
                     document.current_version ? formatBytes(document.current_version.size) : null,
