@@ -1,4 +1,4 @@
-import { ChevronRight, Folder, FolderLock, FolderOpen, HardDrive } from 'lucide-react';
+import { ChevronRight, File, FileArchive, Folder, FolderLock, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
 
 import { DocumentStatusBadge } from '@/components/status';
@@ -26,6 +26,9 @@ export type Folder = {
 
 export type Crumb = { id: string | null; name: string };
 
+/** Documents older than this drop into the collapsed "Histórico" section. */
+const HISTORY_DAYS = 90;
+
 /** Walks the parent chain so the breadcrumb needs no extra requests. */
 export function buildBreadcrumbs(folders: Folder[], currentId: string | null): Crumb[] {
   const byId = new Map(folders.map((folder) => [folder.id, folder]));
@@ -45,10 +48,12 @@ export function childrenOf(folders: Folder[], parentId: string | null): Folder[]
 }
 
 /**
- * File-explorer view over the client's folder tree.
+ * File-explorer view over the client's folder tree, styled like Dropbox: a
+ * column header, folders first, then files, with actions revealed on hover.
  *
- * Used by both areas: the same component renders for staff and for clients,
- * and each side only receives the folders and documents its token allows.
+ * The same component serves staff and clients — each side only receives what
+ * its token allows, and `canManage` gates the staff-only actions. Older files
+ * fold into a collapsed "Histórico" so the current view stays short.
  */
 export function FolderExplorer({
   folders,
@@ -65,6 +70,7 @@ export function FolderExplorer({
   basePath: string;
   query?: string;
   action?: React.ReactNode;
+  /** Staff management (rename/delete). Clients only download. */
   canDelete?: boolean;
 }) {
   const crumbs = buildBreadcrumbs(folders, currentId);
@@ -78,11 +84,17 @@ export function FolderExplorer({
     return search ? `${basePath}?${search}` : basePath;
   };
 
+  const cutoff = Date.now() - HISTORY_DAYS * 86_400_000;
+  const recent = documents.filter((d) => new Date(d.created_at).getTime() >= cutoff);
+  const history = documents.filter((d) => new Date(d.created_at).getTime() < cutoff);
+
+  const empty = subfolders.length === 0 && documents.length === 0;
+
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader
-        title="Pastas"
-        description={currentId ? crumbs.map((crumb) => crumb.name).join(' / ') : 'Estrutura de documentos do cliente.'}
+        title="Ficheiros"
+        description="Envie, descarregue e organize — como no seu computador."
         action={action}
       />
 
@@ -101,57 +113,98 @@ export function FolderExplorer({
         ))}
       </nav>
 
-      {subfolders.length === 0 && documents.length === 0 ? (
-        <EmptyState title="Pasta vazia" description="Sem subpastas nem documentos aqui." />
+      {empty ? (
+        <EmptyState title="Pasta vazia" description="Arraste ficheiros para enviar ou crie uma pasta." />
       ) : (
-        <ul className="divide-mist/70 divide-y">
-          {subfolders.map((folder) => (
-            <li key={folder.id} className="hover:bg-mist/30 flex items-center gap-3 px-5 py-3">
-              <Link href={href(folder.id)} className="flex min-w-0 flex-1 items-center gap-3">
-                {folder.visibility === 'staff_only' ? (
-                  <FolderLock className="text-navy/50 size-4.5 shrink-0" aria-hidden />
-                ) : folder.folder_type === 'protocol' ? (
-                  <FolderOpen className="text-gold-sun size-4.5 shrink-0" aria-hidden />
-                ) : (
-                  <Folder className="text-gold-sun size-4.5 shrink-0" aria-hidden />
-                )}
-                <span className="text-navy truncate text-sm font-medium">{folder.name}</span>
-                {folder.visibility === 'staff_only' ? <Badge tone="warning">Interna</Badge> : null}
-              </Link>
-              {canDelete ? <FolderActions folderId={folder.id} name={folder.name} /> : null}
-              <ChevronRight className="text-navy/30 size-4 shrink-0" aria-hidden />
-            </li>
-          ))}
+        <>
+          {/* Column header, Explorer-style. */}
+          <div className="text-navy/45 border-mist hidden border-b px-5 py-2 text-xs font-medium tracking-wide uppercase sm:flex">
+            <span className="flex-1">Nome</span>
+            <span className="w-24 text-right">Tamanho</span>
+            <span className="w-40 text-right">Modificado</span>
+            <span className="w-24" />
+          </div>
 
-          {documents.map((document) => (
-            <li key={document.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <HardDrive className="text-navy/40 size-4.5 shrink-0" aria-hidden />
-                <div className="min-w-0">
-                  <p className="text-navy truncate text-sm font-medium">{document.title}</p>
-                  <p className="text-navy/55 mt-0.5 text-xs">
-                    {[
-                      document.protocol_number,
-                      document.uploader_name_snapshot,
-                      document.current_version ? `v${document.current_version.version_number}` : null,
-                      document.current_version ? formatBytes(document.current_version.size) : null,
-                      formatDateTime(document.created_at),
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <DocumentStatusBadge status={document.status} />
-                {document.status === 'available' ? <DownloadButton documentId={document.id} /> : null}
-                {canDelete ? <RenameDocumentButton documentId={document.id} title={document.title} /> : null}
-                {canDelete ? <DeleteDocumentButton documentId={document.id} title={document.title} /> : null}
-              </div>
-            </li>
-          ))}
-        </ul>
+          <ul className="divide-mist/60 divide-y">
+            {subfolders.map((folder) => (
+              <FolderRow key={folder.id} folder={folder} href={href(folder.id)} canManage={canDelete} />
+            ))}
+            {recent.map((document) => (
+              <FileRow key={document.id} document={document} canManage={canDelete} />
+            ))}
+          </ul>
+
+          {history.length ? (
+            <details className="group border-mist border-t">
+              <summary className="text-navy/60 hover:bg-mist/30 flex cursor-pointer items-center gap-2 px-5 py-3 text-sm font-medium select-none">
+                <ChevronRight className="size-4 transition-transform group-open:rotate-90" aria-hidden />
+                Histórico ({history.length}) — ficheiros com mais de {HISTORY_DAYS} dias
+              </summary>
+              <ul className="divide-mist/60 divide-y">
+                {history.map((document) => (
+                  <FileRow key={document.id} document={document} canManage={canDelete} />
+                ))}
+              </ul>
+            </details>
+          ) : null}
+        </>
       )}
     </Card>
+  );
+}
+
+function FolderRow({ folder, href, canManage }: { folder: Folder; href: string; canManage: boolean }) {
+  const Icon = folder.visibility === 'staff_only' ? FolderLock : folder.folder_type === 'protocol' ? FolderOpen : Folder;
+  return (
+    <li className="group hover:bg-mist/30 flex items-center gap-3 px-5 py-2.5">
+      <Link href={href} className="flex min-w-0 flex-1 items-center gap-3">
+        <Icon className="text-gold-sun size-5 shrink-0" aria-hidden />
+        <span className="text-navy truncate text-sm font-medium">{folder.name}</span>
+        {folder.visibility === 'staff_only' ? <Badge tone="warning">Interna</Badge> : null}
+      </Link>
+      <span className="hidden w-24 text-right text-xs text-navy/40 sm:block">—</span>
+      <span className="hidden w-40 text-right text-xs text-navy/40 sm:block">—</span>
+      <span className="flex w-24 items-center justify-end gap-1">
+        {canManage ? (
+          <span className="opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+            <FolderActions folderId={folder.id} name={folder.name} />
+          </span>
+        ) : null}
+        <Link href={href} aria-label="Abrir">
+          <ChevronRight className="text-navy/30 size-4 shrink-0" aria-hidden />
+        </Link>
+      </span>
+    </li>
+  );
+}
+
+function FileRow({ document, canManage }: { document: PortalDocument; canManage: boolean }) {
+  const Icon = document.category === 'zip' ? FileArchive : File;
+  const size = document.current_version ? formatBytes(document.current_version.size) : '—';
+  return (
+    <li className="group hover:bg-mist/30 flex items-center gap-3 px-5 py-2.5">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <Icon className="text-navy/40 size-5 shrink-0" aria-hidden />
+        <div className="min-w-0">
+          <p className="text-navy truncate text-sm font-medium">{document.title}</p>
+          <p className="text-navy/50 mt-0.5 truncate text-xs">
+            {[document.protocol_number, document.uploader_name_snapshot].filter(Boolean).join(' · ')}
+          </p>
+          {document.note ? <p className="text-navy/60 mt-0.5 truncate text-xs italic">“{document.note}”</p> : null}
+        </div>
+      </div>
+      <span className="hidden w-24 text-right text-xs text-navy/50 sm:block">{size}</span>
+      <span className="hidden w-40 text-right text-xs text-navy/50 sm:block">{formatDateTime(document.created_at)}</span>
+      <span className="flex w-24 items-center justify-end gap-1">
+        <DocumentStatusBadge status={document.status} />
+        {document.status === 'available' ? <DownloadButton documentId={document.id} /> : null}
+        {canManage ? (
+          <span className="flex gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+            <RenameDocumentButton documentId={document.id} title={document.title} />
+            <DeleteDocumentButton documentId={document.id} title={document.title} />
+          </span>
+        ) : null}
+      </span>
+    </li>
   );
 }
