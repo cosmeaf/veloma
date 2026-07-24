@@ -218,7 +218,7 @@ export function SecurityPanel({
           <EmptyState title="Sem registos" />
         ) : (
           <ul className="divide-mist/70 divide-y">
-            {history.slice(0, 3).map((event) => {
+            {history.slice(0, 1).map((event) => {
               const flags = [
                 event.new_device && 'novo dispositivo',
                 event.new_ip && 'novo IP',
