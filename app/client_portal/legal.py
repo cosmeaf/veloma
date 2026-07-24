@@ -5,12 +5,38 @@ changes (kept in sync with the frontend legal pages). Each acceptance stores the
 versions the user actually agreed to, so the proof remains meaningful over time.
 """
 
+import hashlib
 import io
 
 TERMS_VERSION = '2026-07-23'
 PRIVACY_VERSION = '2026-07-23'
 
 COMPANY_NAME = 'Veloma — Contabilidade e Consultoria Fiscal, Lda.'
+
+
+def acceptance_verification_hash(acceptance):
+    """Tamper-evident SHA-256 over the immutable consent evidence.
+
+    This is the audit "protocol" code printed on the proof. Recomputing it over
+    the stored record must reproduce the same value, so any change to the
+    evidence (who, when, from where, which versions) is detectable — the seal
+    required by the RGPD accountability principle.
+    """
+    accepted_at = acceptance.accepted_at.isoformat() if acceptance.accepted_at else ''
+    canonical = '|'.join((
+        str(acceptance.id),
+        (acceptance.email_snapshot or '').strip().lower(),
+        acceptance.client_name_snapshot or '',
+        acceptance.terms_version or '',
+        acceptance.privacy_version or '',
+        accepted_at,
+        acceptance.ip_address or '',
+        acceptance.country_code or '',
+        acceptance.region or '',
+        acceptance.device or '',
+        acceptance.user_agent or '',
+    ))
+    return hashlib.sha256(canonical.encode('utf-8')).hexdigest()
 
 
 def build_acceptance_pdf(*, acceptance, first_name='', last_name=''):
@@ -71,6 +97,15 @@ def build_acceptance_pdf(*, acceptance, first_name='', last_name=''):
     ua = (acceptance.user_agent or '')[:110]
     line(f'User-agent: {ua}')
     line(f'Referência: {acceptance.id}')
+
+    y -= 4 * mm
+    line('Protocolo de auditoria (SHA-256)', size=12, bold=True, gap=6)
+    verification = getattr(acceptance, 'verification_hash', '') or acceptance_verification_hash(acceptance)
+    pdf.setFont('Courier', 9)
+    pdf.drawString(left, y, verification)
+    y -= 7 * mm
+    pdf.setFont('Helvetica', 8)
+    pdf.drawString(left, y, 'Selo de integridade: recalcular o SHA-256 sobre a evidência acima reproduz este código.')
 
     y -= 8 * mm
     pdf.setFont('Helvetica-Oblique', 8)

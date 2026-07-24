@@ -84,6 +84,32 @@ def mirror_terms_acceptance_to_dropbox(self, acceptance_id):
     return {'acceptance_id': str(acceptance.id), 'dropbox_path': path}
 
 
+@shared_task
+def sweep_pending_rgpd_mirrors(limit=200):
+    """Re-queues consent proofs that never reached the RGPD archive.
+
+    The per-acceptance task returns early (no retry) when Dropbox is disabled, so
+    acceptances signed before Dropbox was configured stay unarchived. This safety
+    net catches them once the integration is on — legal proofs must not be lost.
+    """
+    from config.common.dropbox_service import DropboxService
+    from .models import TermsAcceptance
+
+    if not DropboxService.is_enabled(DropboxService.PURPOSE_RGPD):
+        return {'skipped': 'dropbox_disabled'}
+    pending = (
+        TermsAcceptance.objects.exclude(pdf_storage_key='')
+        .filter(archived_path='')
+        .order_by('accepted_at')
+        .values_list('id', flat=True)[:limit]
+    )
+    queued = 0
+    for acceptance_id in pending:
+        mirror_terms_acceptance_to_dropbox.delay(str(acceptance_id))
+        queued += 1
+    return {'queued': queued}
+
+
 def _clean_segment(value, fallback='item'):
     """Readable, Dropbox-safe path segment: keeps letters (incl. accents),
     digits, spaces and common punctuation; drops path separators and control

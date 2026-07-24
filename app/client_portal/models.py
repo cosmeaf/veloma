@@ -925,6 +925,10 @@ class TermsAcceptance(models.Model):
     device = models.CharField(max_length=255, blank=True)
     user_agent = models.TextField(blank=True)
 
+    # Tamper-evident SHA-256 over the immutable evidence — the audit "protocol"
+    # code printed on the proof; recomputing it must reproduce the value.
+    verification_hash = models.CharField(max_length=64, blank=True, db_index=True)
+
     # PDF proof: key in object storage plus the mirror path in the RGPD archive.
     pdf_storage_key = models.CharField(max_length=512, blank=True)
     archived_path = models.CharField(max_length=512, blank=True)

@@ -196,6 +196,11 @@ class InvitationTests(ClientPortalTestCase):
         # A sealed PDF proof is stored and its key recorded.
         self.assertTrue(record.pdf_storage_key)
         self.assertTrue(StorageService.exists(record.pdf_storage_key))
+        # The audit hash seals the evidence and is reproducible from the record.
+        from .legal import acceptance_verification_hash
+
+        self.assertEqual(len(record.verification_hash), 64)
+        self.assertEqual(record.verification_hash, acceptance_verification_hash(record))
 
     def test_invitation_cannot_be_accepted_twice(self):
         _invitation, token = InvitationService.create(

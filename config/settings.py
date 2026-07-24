@@ -225,6 +225,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'app.client_portal.tasks.retry_failed_scans',
         'schedule': float(env('SCAN_RETRY_INTERVAL_SECONDS', '3600')),
     },
+    'sweep-pending-rgpd-mirrors': {
+        'task': 'app.client_portal.tasks.sweep_pending_rgpd_mirrors',
+        'schedule': float(env('RGPD_MIRROR_SWEEP_INTERVAL_SECONDS', '3600')),
+    },
 }
 
 CACHE_URL = env('CACHE_URL', 'redis://localhost:6379/2')

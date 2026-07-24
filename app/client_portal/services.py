@@ -72,7 +72,7 @@ class TermsAcceptanceService:
     @staticmethod
     def record(*, user, client=None, context=TermsAcceptance.CONTEXT_INVITATION, request=None,
                first_name='', last_name=''):
-        from .legal import PRIVACY_VERSION, TERMS_VERSION, build_acceptance_pdf
+        from .legal import PRIVACY_VERSION, TERMS_VERSION, acceptance_verification_hash, build_acceptance_pdf
 
         acceptance = TermsAcceptance.objects.create(
             user=user,
@@ -88,6 +88,10 @@ class TermsAcceptanceService:
             device=RequestContext.device(request),
             user_agent=RequestContext.user_agent(request),
         )
+
+        # Seal the evidence with the audit hash before rendering the proof.
+        acceptance.verification_hash = acceptance_verification_hash(acceptance)
+        acceptance.save(update_fields=('verification_hash',))
 
         try:
             pdf_bytes = build_acceptance_pdf(acceptance=acceptance, first_name=first_name, last_name=last_name)
