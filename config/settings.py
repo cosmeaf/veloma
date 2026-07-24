@@ -118,8 +118,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-LANGUAGE_CODE = env('DJANGO_LANGUAGE_CODE', 'pt-pt')
-TIME_ZONE = env('DJANGO_TIME_ZONE', 'Europe/Lisbon')
+LANGUAGE_CODE = env('DJANGO_LANGUAGE_CODE', 'pt-br')
+TIME_ZONE = env('DJANGO_TIME_ZONE', 'America/Sao_Paulo')
 USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
