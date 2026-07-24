@@ -279,6 +279,27 @@ class ClientAccessTests(ClientPortalTestCase):
         detail = self.client.get(f'/api/client-portal/clients/{other.id}/')
         self.assertEqual(detail.status_code, 404)
 
+    def test_staff_share_one_queue_regardless_of_assignment(self):
+        # client_record is assigned to self.staff; a different staff member must
+        # still see it and its protocols, and be able to reassign — the queue is
+        # shared so nothing is stuck when a colleague is away.
+        protocol = self._protocol()
+        other = self._user('outro-staff@veloma.local', 'STAFF')
+        self._authenticate(other)
+        clients = self.client.get('/api/client-portal/clients/')
+        self.assertEqual(clients.status_code, 200)
+        ids = {item['id'] for item in clients.data['data']['clients']}
+        self.assertIn(str(self.client_record.id), ids)
+
+        detail = self.client.get(f'/api/client-portal/protocols/{protocol.id}/')
+        self.assertEqual(detail.status_code, 200, detail.data)
+
+        assign = self.client.post(
+            f'/api/client-portal/protocols/{protocol.id}/assign/',
+            {'assigned_to': other.id}, format='json',
+        )
+        self.assertEqual(assign.status_code, 200, assign.data)
+
     def test_deactivated_client_blocks_uploads_and_new_protocols(self):
         user, _member = self._member()
         ClientLifecycleService.deactivate(

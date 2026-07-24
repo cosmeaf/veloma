@@ -1,5 +1,3 @@
-from django.db.models import Q
-
 from .models import (
     Client,
     ClientFolder,
@@ -37,10 +35,12 @@ def active_membership_ids(user):
 
 
 def visible_clients(user):
-    if is_manager(user):
-        return Client.objects.all()
+    # Staff share one queue: every staff member sees every client and every
+    # protocol, like a support-ticket inbox. Assignment (Client.assigned_staff /
+    # Protocol.assigned_to) is only a "who is handling it" label that any
+    # colleague can reassign — so nothing is stuck when someone is away.
     if is_staff_member(user):
-        return Client.objects.filter(Q(assigned_staff=user) | Q(assigned_staff__isnull=True))
+        return Client.objects.all()
     return Client.objects.filter(id__in=active_membership_ids(user))
 
 
