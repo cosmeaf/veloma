@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    locale: 'pt_BR',
+    locale: 'pt_PT',
     url: SITE_URL,
     siteName: site.name,
     title: `${site.name} — ${site.tagline}`,
@@ -54,7 +54,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR" className={`${cinzel.variable} ${jost.variable} h-full antialiased`}>
+    <html lang="pt-PT" className={`${cinzel.variable} ${jost.variable} h-full antialiased`}>
       <body className="bg-mist/30 text-navy flex min-h-full flex-col">
         {children}
         <CookieConsent />

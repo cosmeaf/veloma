@@ -1,8 +1,8 @@
-// Brazil locale and timezone, so dates read the same regardless of the viewer's
-// browser timezone (the backend stores UTC).
-const TZ = 'America/Sao_Paulo';
-const dateFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium', timeZone: TZ });
-const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium', timeStyle: 'short', timeZone: TZ });
+// Portugal locale and timezone, so dates read the same regardless of the
+// viewer's browser timezone (the backend stores UTC).
+const TZ = 'Europe/Lisbon';
+const dateFormatter = new Intl.DateTimeFormat('pt-PT', { dateStyle: 'medium', timeZone: TZ });
+const dateTimeFormatter = new Intl.DateTimeFormat('pt-PT', { dateStyle: 'medium', timeStyle: 'short', timeZone: TZ });
 
 export function formatDate(value?: string | null): string {
   if (!value) return '—';
