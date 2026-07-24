@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 
 import { LogoutButton } from '@/components/logout-button';
 import { useToast } from '@/components/toast';
-import { Alert, Badge, Button, Card, CardHeader, EmptyState, Field, Input, PageHeader, Switch } from '@/components/ui';
+import { Alert, Badge, Button, Card, CardHeader, cn, EmptyState, Field, Input, PageHeader, Switch } from '@/components/ui';
 import { formatDateTime } from '@/lib/utils/format';
 import { changePasswordSchema, type ChangePasswordInput } from '@/lib/validation/schemas';
 import type { AccessEvent, Session, User } from '@/types';
@@ -98,9 +98,17 @@ export function SecurityPanel({
     <>
       <PageHeader title="Segurança" description={user.email} />
 
+      {/* Loud, plain-language warning when 2FA is off, so it is never missed. */}
+      {!twoFactor ? (
+        <Alert tone="warning">
+          <strong>A verificação em duas etapas está DESATIVADA.</strong> Ative já (no botão abaixo) para proteger a
+          sua conta — passa a receber um código por e-mail sempre que entrar.
+        </Alert>
+      ) : null}
+
       {/* Two columns: 2FA and password change side by side. */}
       <div className="grid items-start gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className={twoFactor ? undefined : 'border-gold-sun/60'}>
           <CardHeader
             title="Verificação em duas etapas"
             description="Um código enviado por e-mail a cada início de sessão."
@@ -111,7 +119,9 @@ export function SecurityPanel({
                 <ShieldCheck className="text-gold size-4.5" aria-hidden />
               </span>
               <div>
-                <p className="text-navy text-sm font-medium">{twoFactor ? 'Ativa' : 'Desativada'}</p>
+                <p className={cn('text-sm font-medium', twoFactor ? 'text-emerald-600' : 'text-red-600')}>
+                  {twoFactor ? 'Ativa' : 'Desativada — recomendamos ativar'}
+                </p>
                 <p className="text-navy/55 mt-0.5 text-xs">
                   {twoFactor
                     ? 'Ao entrar, pedimos o código enviado para o seu e-mail.'
@@ -155,12 +165,12 @@ export function SecurityPanel({
 
       <Card>
         <CardHeader
-          title="Sessões ativas"
+          title="Sessão atual"
           description={`${active.length} sessão(ões) em curso.`}
           action={<LogoutButton all label="Terminar todas" />}
         />
         <ul className="divide-mist/70 divide-y">
-          {sessions.slice(0, 12).map((session) => {
+          {active.slice(0, 2).map((session) => {
             const flags = [
               session.metadata?.new_device && 'novo dispositivo',
               session.metadata?.new_ip && 'novo IP',
@@ -203,12 +213,12 @@ export function SecurityPanel({
       </Card>
 
       <Card>
-        <CardHeader title="Histórico de acessos" description="Os acessos mais recentes à sua conta." />
+        <CardHeader title="Último acesso" description="Os acessos mais recentes à sua conta." />
         {history.length === 0 ? (
           <EmptyState title="Sem registos" />
         ) : (
           <ul className="divide-mist/70 divide-y">
-            {history.map((event) => {
+            {history.slice(0, 3).map((event) => {
               const flags = [
                 event.new_device && 'novo dispositivo',
                 event.new_ip && 'novo IP',

@@ -38,7 +38,8 @@ export function LogoutButton({
       onClick={logout}
       disabled={busy}
       className={cn(
-        onNavy && 'border-white/25 bg-white/15 text-ivory hover:bg-white/25 hover:text-white',
+        // Light pill on the navy sidebar: clearly visible, dark text on light bg.
+        onNavy && '!border-transparent !bg-ivory !text-navy hover:!bg-white',
         iconOnly && 'px-2',
       )}
       title={iconOnly ? label : undefined}
