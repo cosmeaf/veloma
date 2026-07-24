@@ -16,6 +16,7 @@ from .views import (
     DocumentDeleteView,
     DocumentRenameView,
     DocumentDetailView,
+    DocumentDownloadFileView,
     DocumentDownloadView,
     DocumentListView,
     DocumentMoveView,
@@ -151,4 +152,5 @@ urlpatterns = [
     path('documents/<uuid:document_id>/delete/', DocumentDeleteView.as_view(), name='document-delete'),
     path('documents/<uuid:document_id>/rename/', DocumentRenameView.as_view(), name='document-rename'),
     path('documents/<uuid:document_id>/download/', DocumentDownloadView.as_view(), name='document-download'),
+    path('documents/<uuid:document_id>/file/', DocumentDownloadFileView.as_view(), name='document-download-file'),
 ]

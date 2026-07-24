@@ -5,10 +5,20 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui';
 
+/** Pulls the filename out of a Content-Disposition header, falling back to a default. */
+function filenameFrom(disposition: string | null): string {
+  if (!disposition) return 'documento';
+  const utf8 = /filename\*=UTF-8''([^;]+)/i.exec(disposition);
+  if (utf8) return decodeURIComponent(utf8[1]);
+  const plain = /filename="?([^";]+)"?/i.exec(disposition);
+  return plain ? plain[1] : 'documento';
+}
+
 /**
- * Asks the backend for a short-lived signed URL and opens it.
+ * Streams the document from the authenticated backend and saves it.
  *
- * The URL is never stored: each download is authorised and audited server-side.
+ * The file is piped through the API (never a public storage URL), and each
+ * download is authorised and audited server-side.
  */
 export function DownloadButton({ documentId }: { documentId: string }) {
   const [busy, setBusy] = useState(false);
@@ -17,14 +27,27 @@ export function DownloadButton({ documentId }: { documentId: string }) {
   async function download() {
     setBusy(true);
     setError(null);
-    const response = await fetch(`/api/portal/documents/${documentId}/download`, { method: 'POST' });
-    const payload = await response.json().catch(() => ({}));
-    setBusy(false);
-    if (!response.ok || !payload.success) {
-      setError(payload.message ?? 'Download não autorizado.');
-      return;
+    try {
+      const response = await fetch(`/api/portal/documents/${documentId}/file`);
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        setError(payload.message ?? 'Download não autorizado.');
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filenameFrom(response.headers.get('content-disposition'));
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError('Não foi possível descarregar.');
+    } finally {
+      setBusy(false);
     }
-    window.open(payload.data.url, '_blank', 'noopener,noreferrer');
   }
 
   return (

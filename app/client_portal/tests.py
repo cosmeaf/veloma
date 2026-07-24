@@ -570,6 +570,24 @@ class DocumentTests(ClientPortalTestCase):
         denied = self.client.post(f'/api/client-portal/documents/{document.id}/download/')
         self.assertEqual(denied.status_code, 404)
 
+    def test_download_file_streams_the_content_and_creates_audit(self):
+        user, _member = self._member()
+        document, _version = DocumentService.upload(
+            client=self.client_record, upload=self._upload(), uploaded_by=user,
+        )
+        self._authenticate(user)
+        response = self.client.get(f'/api/client-portal/documents/{document.id}/file/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('attachment', response.get('Content-Disposition', ''))
+        self.assertEqual(b''.join(response.streaming_content), b'%PDF-1.4 conteudo de teste')
+        self.assertEqual(document.downloads.count(), 1)
+
+        intruder = self._user('intruso-file@example.com', 'USER')
+        self.client.credentials()
+        self._authenticate(intruder)
+        denied = self.client.get(f'/api/client-portal/documents/{document.id}/file/')
+        self.assertEqual(denied.status_code, 404)
+
     def test_staff_only_documents_are_invisible_to_the_client(self):
         user, _member = self._member()
         document, _version = DocumentService.upload(

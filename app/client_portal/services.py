@@ -1511,6 +1511,33 @@ class DocumentService:
 
         settings = cls._settings()
         url = StorageService.download_url(version.storage_key, expires_in=settings.signed_url_seconds)
+        cls._record_download(document=document, version=version, user=user, request=request)
+        return {'url': url, 'expires_in': settings.signed_url_seconds, 'version': version.version_number}
+
+    @classmethod
+    def open_download(cls, *, document, user, request=None):
+        """Opens the stored object for streaming through the backend.
+
+        The file is served by the authenticated API itself, so no public object
+        storage endpoint is required. Returns the open handle plus the name and
+        content type for the response. Same audit trail as a signed download.
+        """
+        version = document.current_version
+        if version is None:
+            raise ValueError('This document has no stored version.')
+        if not document.is_downloadable:
+            raise ValueError('This document is not available for download.')
+        if version.scan_status == DocumentVersion.SCAN_INFECTED:
+            raise ValueError('This document is quarantined.')
+        handle = StorageService.open(version.storage_key)
+        cls._record_download(document=document, version=version, user=user, request=request)
+        filename = version.original_name or document.title
+        content_type = version.content_type or 'application/octet-stream'
+        return handle, filename, content_type
+
+    @classmethod
+    def _record_download(cls, *, document, version, user, request=None):
+        """Writes the download audit row and, for protocol documents, a timeline event."""
         DownloadAudit.objects.create(
             document=document,
             version=version,
@@ -1529,7 +1556,6 @@ class DocumentService:
                 metadata={'document_id': str(document.id)},
                 request=request,
             )
-        return {'url': url, 'expires_in': settings.signed_url_seconds, 'version': version.version_number}
 
 
 class CommentService:

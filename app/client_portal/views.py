@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status as http_status
 from rest_framework.generics import GenericAPIView
@@ -937,6 +938,30 @@ class DocumentDownloadView(PortalView):
         except ValueError as exc:
             return error(str(exc))
         return api_response(data=payload, message='Signed URL created.')
+
+
+class DocumentDownloadFileView(PortalView):
+    """Streams the file through the authenticated API — no public storage URL.
+
+    Same permission and scan checks as the signed-URL download; the object is
+    read from storage over the internal endpoint and piped to the client.
+    """
+
+    def get(self, request, document_id):
+        document = selectors.visible_documents(request.user).filter(pk=document_id).first()
+        if not document:
+            return error('Document not found.', http_status.HTTP_404_NOT_FOUND)
+        if not selectors.is_staff_member(request.user):
+            membership = selectors.membership_for(request.user, document.client)
+            if not membership or not membership.can_download:
+                return error('You cannot download documents for this client.', http_status.HTTP_403_FORBIDDEN)
+        try:
+            handle, filename, content_type = DocumentService.open_download(
+                document=document, user=request.user, request=request
+            )
+        except ValueError as exc:
+            return error(str(exc))
+        return FileResponse(handle, as_attachment=True, filename=filename, content_type=content_type)
 
 
 class DocumentMoveView(PortalView):
